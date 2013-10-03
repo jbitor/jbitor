@@ -3,5 +3,12 @@ set -e
 
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
-go install bitbucket.com/jeremybanks/go-distributed
-go-distributed $*
+
+go fmt bitbucket.com/jeremybanks/go-distributed/bencoding
+go fmt bitbucket.com/jeremybanks/go-distributed/main
+
+go test bitbucket.com/jeremybanks/go-distributed/bencoding
+
+go install bitbucket.com/jeremybanks/go-distributed/main
+
+main $*
