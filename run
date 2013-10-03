@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
+export PATH="$PATH:$GOPATH/bin"
+go install bitbucket.com/jeremybanks/go-distributed
+go-distributed $*
