@@ -2,27 +2,30 @@ package bencoding
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 )
 
-type ValueType int
+type BValueType int
 
 const (
-	STRING ValueType = iota
+	STRING BValueType = iota
 	INTEGER
 	LIST
 	DICTIONARY
 )
 
-type Value struct {
-	t            ValueType
+type BValue struct {
+	t            BValueType
 	string_value string
 	int_value    int64
-	list_value   []Value
-	map_value    map[string]Value
+	list_value   []BValue
+	map_value    map[string]BValue
 }
 
-func (value Value) String() string {
+func (value BValue) String() string {
+	// Returns a JSON-like representation of this bencoding.Value.
+
 	switch value.t {
 	case STRING:
 		return value.string_value
@@ -52,10 +55,39 @@ func (value Value) String() string {
 	return "<invalid .t for bencoding.Value>"
 }
 
-func Encode() string {
-	val := Value{t: LIST, list_value: []Value{
-		Value{t: STRING, string_value: "Hello"},
-		Value{t: STRING, string_value: "World"}}}
+func NewBValue(data interface{}) (value *BValue, err error) {
+	// Uses reflection to convert an arbitrary object to a
+	// bencoding.Value if possible.
 
-	return fmt.Sprintf("%v\n", val)
+	return nil, errors.New("Not implemented")
 }
+
+func NewBValueString(val string) *BValue {
+	return &BValue{t: STRING, string_value: val}
+}
+
+func Bencode(data interface{}) (bencoded string, err error) {
+	val, err := NewBValue(data)
+
+	if err == nil {
+		bencoded = val.Bencode()
+	}
+
+	return
+}
+
+func (value BValue) Bencode() string {
+	return ""
+}
+
+// func Bdecode(data []byte) BValue {
+// 	// 	
+// }
+
+// func Encode() string {
+// 	val := Value{t: LIST, list_value: []Value{
+// 		Value{t: STRING, string_value: "Hello"},
+// 		Value{t: STRING, string_value: "World"}}}
+
+// 	return fmt.Sprintf("%v\n", val)
+// }
