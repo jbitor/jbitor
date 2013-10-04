@@ -7,7 +7,11 @@ Some tasks:
 [ x ] Bencoding from specific data structure
 [ x ] Bencoding tests
 [ x ] Bencodable interface with tests
-[   ] Check err every time you .() coerce values
+[ x ] Check err every time you .() coerce values
+[ x ] Considering using "marshalling" naming conventions like json
+[   ] consider using []byte IO instead of strings
+[   ] Support JSON marshalling of bencoding.Value
+[   ] More explicit tests using interfaces
 [   ] Bdecoding to specific data structure
 [   ] Bdecoding tests
 [   ] Bdecodable interface with tests

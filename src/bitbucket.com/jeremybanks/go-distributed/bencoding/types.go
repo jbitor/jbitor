@@ -1,23 +1,31 @@
 package bencoding
 
-type BValueType int
+type ValueType int
 
 const (
-	STRING BValueType = iota
+	STRING ValueType = iota
 	INTEGER
 	LIST
 	DICTIONARY
 )
 
-type BValue struct {
-	t     BValueType
+type Value struct {
+	t     ValueType
 	value interface{}
 }
 
 type Bencodable interface {
-	BValue() *BValue
+	MarshalBencodingValue() (*Value, error)
 }
 
-// type BDecodable interface {
-//  initFromBValue(*BValue) error
-// }
+type Marshaler interface {
+	MarshalBencoding() ([]byte, error)
+}
+
+type Bdecodable interface {
+	UnmarshalBencodingValue(*Value) error
+}
+
+type Unmarshaler interface {
+	UnmarshalBencoding([]byte) error
+}

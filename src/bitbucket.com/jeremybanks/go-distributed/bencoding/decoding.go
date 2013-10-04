@@ -4,20 +4,24 @@ import (
 	"errors"
 )
 
-func Bdecode(str string) (bval *BValue, err error) {
+func Bdecode(str string) (bval *Value, err error) {
 	err = errors.New("Bdecode Not implemented")
 
 	return
 }
 
-// func BdecodeTo(str string, target *BDecodable) (err error) {
-//  bval, err := Bdecode(str)
+func BdecodeTo(str string, target *Bdecodable) (err error) {
+	panic("BdecodeTo not implemented")
 
-//  if err != nil {
-//      return
-//  }
+	// TODO: Short-circuit if Unmarshaller too
 
-//  err = target.initFromBValue(bval)
+	// bval, err := Bdecode(str)
 
-//  return
-// }
+	// if err != nil {
+	// 	return
+	// }
+
+	// err = target.InitFromBencodingValue(bval)
+
+	return
+}

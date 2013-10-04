@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	msg, _ := bencoding.NewBValue("I guess the tests passed!")
+	msg, _ := bencoding.NewValue("I guess the tests passed!")
 	fmt.Println(msg)
 }
