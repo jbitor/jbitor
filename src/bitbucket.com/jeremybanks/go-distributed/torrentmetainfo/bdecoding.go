@@ -11,7 +11,7 @@ func (metainfo T) UnmarshalBencodingValue(bval *bencoding.Value) (err error) {
 		return errors.New("Root not a dictionary")
 	}
 
-	metainfo.name, ok = val["name"].Value.(string)
+	metainfo.Name, ok = val["name"].Value.(string)
 	if !ok {
 		return errors.New("name not a string")
 	}

@@ -12,7 +12,9 @@ Some tasks:
 [ x ] Use []byte IO instead of strings
 [ x ] Torrent metadata struct
 [ x ] Torrent metadata to bencoding
-[   ] Torrent metadata to bencoding tests
+[ x ] Torrent metadata to bencoding tests
+[   ] - including tests for multiple-piece torrents
+[   ] - including tests for failures, and sanity assertions
 [   ] Torrent metadata from bencoding
 [   ] Support JSON marshalling of bencoding.Value
 [   ] JSON marshalling support for torrent metadata through bencoding
@@ -20,4 +22,6 @@ Some tasks:
 [   ] Bdecoding to specific data structure
 [   ] Bdecoding tests
 [   ] Bdecodable interface with tests
+[   ] Torrent metadata generation
 [   ] Torrent metadata verification
+[   ] Make bencoding source of truth for torrent info, so that you can preserve the hash.

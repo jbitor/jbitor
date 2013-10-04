@@ -6,20 +6,27 @@ import (
 
 func (metainfo T) MarshalBencodingValue() (bval *bencoding.Value, err error) {
 	val := map[string]interface{}{
-		"name":         metainfo.name,
-		"pieces":       metainfo.pieces,
-		"piece length": metainfo.piece_length,
+		"name":         metainfo.Name,
+		"pieces":       metainfo.Pieces,
+		"piece length": metainfo.PieceLength,
 	}
 
-	if metainfo.files == nil {
-		val["length"] = metainfo.length
+	if metainfo.Files == nil {
+		val["length"] = metainfo.Length
 	} else {
-		files := make([]interface{}, len(*metainfo.files))
+		// Convert from []string to []interface{}:
+		files := make([]interface{}, len(*metainfo.Files))
 
-		for i, file := range *metainfo.files {
+		for i, file := range *metainfo.Files {
+			path := make([]interface{}, len(file.Path))
+
+			for index, pathPart := range file.Path {
+				path[index] = pathPart
+			}
+
 			files[i] = map[string]interface{}{
-				"length": file.length,
-				"path":   file.path,
+				"length": file.Length,
+				"path":   path,
 			}
 		}
 
