@@ -9,7 +9,7 @@ import (
 
 /*
 	Provides a BValue type for encoding/decoding data as described here:
-	https://wiki.theory.org/BitTorrentSpecification#Bencoding
+	http://www.bittorrent.org/beps/bep_0003.html
 */
 
 type BValueType int
@@ -22,26 +22,23 @@ const (
 )
 
 type BValue struct {
-	t            BValueType
-	string_value string
-	int_value    int64
-	list_value   []BValue
-	dict_value   map[string]BValue
+	t     BValueType
+	value interface{}
 }
 
 func (bval BValue) WriteBencoded(buffer *bytes.Buffer) (err error) {
 	switch bval.t {
 	case STRING:
 		buffer.WriteString(
-			fmt.Sprintf("%v:%v", len(bval.string_value), bval.string_value))
+			fmt.Sprintf("%v:%v", len(bval.value.(string)), bval.value.(string)))
 
 	case INTEGER:
 		buffer.WriteString(
-			fmt.Sprintf("i%ve", bval.int_value))
+			fmt.Sprintf("i%ve", bval.value.(int64)))
 
 	case LIST:
 		buffer.WriteString("l")
-		for _, item := range bval.list_value {
+		for _, item := range bval.value.([]BValue) {
 			var item_str string
 			item_str, err = item.Bencode()
 			if err != nil {
@@ -52,7 +49,10 @@ func (bval BValue) WriteBencoded(buffer *bytes.Buffer) (err error) {
 		buffer.WriteString("e")
 
 	case DICTIONARY:
-		for key, item := range bval.dict_value {
+		// FIXME: keys must be sorted.
+
+		buffer.WriteString("d")
+		for key, item := range bval.value.(map[string]BValue) {
 			buffer.WriteString(
 				fmt.Sprintf("%v:%v", len(key), key))
 
@@ -63,6 +63,7 @@ func (bval BValue) WriteBencoded(buffer *bytes.Buffer) (err error) {
 			}
 			buffer.WriteString(item_str)
 		}
+		buffer.WriteString("e")
 
 	default:
 		err = errors.New(fmt.Sprintf("Illegal BValue.t: %v", bval.t))
@@ -103,17 +104,19 @@ func NewBValue(data interface{}) (bval *BValue, err error) {
 	// Uses reflection to convert an arbitrary object to a
 	// bencoding.Value if possible.
 
-	// http://blog.golang.org/laws-of-reflection
-
 	t := reflect.TypeOf(data)
 
 	switch t.Kind() {
 	case reflect.Int64:
-		bval = &(BValue{t: INTEGER, int_value: data.(int64)})
+		bval = &(BValue{t: INTEGER, value: data.(int64)})
+
 	case reflect.String:
-		bval = &(BValue{t: STRING, string_value: data.(string)})
+		bval = &(BValue{t: STRING, value: data.(string)})
+
 	case reflect.Map:
-		bval = &(BValue{t: DICTIONARY, dict_value: make(map[string]BValue)})
+		bvals := make(map[string]BValue)
+
+		bval = &(BValue{t: DICTIONARY, value: bvals})
 
 		for key, item := range data.(map[string]interface{}) {
 			var item_bval *BValue
@@ -124,17 +127,17 @@ func NewBValue(data interface{}) (bval *BValue, err error) {
 				return
 			}
 
-			bval.dict_value[key] = *item_bval
+			bvals[key] = *item_bval
 		}
+
 	case reflect.Array, reflect.Slice:
 		length := len(data.([]interface{}))
 
-		bval = &(BValue{
-			t:          LIST,
-			list_value: make([]BValue, length),
-		})
+		bvals := make([]BValue, length)
 
-		for index, item := range bval.list_value {
+		bval = &(BValue{t: LIST, value: bvals})
+
+		for index, item := range data.([]interface{}) {
 			var item_bval *BValue
 
 			item_bval, err = NewBValue(item)
@@ -143,8 +146,9 @@ func NewBValue(data interface{}) (bval *BValue, err error) {
 				return
 			}
 
-			bval.list_value[index] = *item_bval
+			bvals[index] = *item_bval
 		}
+
 	default:
 		err = errors.New(fmt.Sprintf("Invalid type for bencoding: %v", t))
 	}
@@ -157,16 +161,16 @@ func (bval BValue) String() string {
 
 	switch bval.t {
 	case STRING:
-		return bval.string_value
+		return bval.value.(string)
 
 	case INTEGER:
-		return fmt.Sprintf("%v", bval.int_value)
+		return fmt.Sprintf("%v", bval.value.(int64))
 
 	case LIST:
 		var buffer bytes.Buffer
 		buffer.WriteString("[")
 
-		for index, item := range bval.list_value {
+		for index, item := range bval.value.([]BValue) {
 			if index > 0 {
 				buffer.WriteString(", ")
 			}
@@ -183,7 +187,7 @@ func (bval BValue) String() string {
 
 		first := true
 
-		for key, item := range bval.dict_value {
+		for key, item := range bval.value.(map[string]BValue) {
 			if first {
 				first = false
 			} else {
