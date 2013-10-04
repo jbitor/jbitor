@@ -4,13 +4,13 @@ import (
 	"errors"
 )
 
-func Bdecode(str string) (bval *Value, err error) {
+func Bdecode(encoded []byte) (bval *Value, err error) {
 	err = errors.New("Bdecode Not implemented")
 
 	return
 }
 
-func BdecodeTo(str string, target *Bdecodable) (err error) {
+func BdecodeTo(encoded []byte, target *Bdecodable) (err error) {
 	panic("BdecodeTo not implemented")
 
 	// TODO: Short-circuit if Unmarshaller too

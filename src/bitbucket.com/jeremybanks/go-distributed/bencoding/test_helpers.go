@@ -14,7 +14,7 @@ func testEncodings(t *testing.T, encodings map[string]interface{}) {
 
 		if err != nil {
 			t.Error("Error while encoding", input, "-", err)
-		} else if target != actual {
+		} else if target != string(actual) {
 			t.Error("Encoding", input, "produced", actual, "instead of", target)
 		}
 	}
@@ -32,7 +32,7 @@ func testUnencodables(t *testing.T, unencodables []interface{}) {
 
 func testDecodings(t *testing.T, decodings map[string]*Value) {
 	for input, target := range decodings {
-		actual, err := Bdecode(input)
+		actual, err := Bdecode([]byte(input))
 
 		if err != nil {
 			t.Error("Error while decoding", input, "-", err)
@@ -46,7 +46,7 @@ func testDecodings(t *testing.T, decodings map[string]*Value) {
 
 func testUndecodables(t *testing.T, undecodables []string) {
 	for _, undecodable := range undecodables {
-		_, err := Bdecode(undecodable)
+		_, err := Bdecode([]byte(undecodable))
 
 		if err == nil {
 			t.Error("No error when attempting to decode undecodable", undecodable)
@@ -69,11 +69,7 @@ func (self bencodableInt32) MarshalBencodingValue() (bval *Value, err error) {
 }
 
 func (self bencodableInt32) MarshalBencoding() (encoded []byte, err error) {
-	var encoded_str string
-	encoded_str, err = Bencode(self)
-	if err == nil {
-		encoded = []byte(encoded_str)
-	}
+	encoded, err = Bencode(self)
 	return
 }
 
@@ -89,7 +85,7 @@ func (self bencodableInt32) UnmarshalBencodingValue(bval *Value) (err error) {
 
 func (self bencodableInt32) UnmarshalBencoding(encoded []byte) (err error) {
 	var bval *Value
-	bval, err = Bdecode(string(encoded))
+	bval, err = Bdecode(encoded)
 	if err == nil {
 		err = self.UnmarshalBencodingValue(bval)
 	}

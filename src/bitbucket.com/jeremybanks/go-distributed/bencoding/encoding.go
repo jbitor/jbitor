@@ -33,12 +33,12 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 
 		buffer.WriteString("l")
 		for _, item := range value {
-			var item_str string
-			item_str, err = item.Bencode()
+			var item_encoded []byte
+			item_encoded, err = item.Bencode()
 			if err != nil {
 				return
 			}
-			buffer.WriteString(item_str)
+			buffer.Write(item_encoded)
 		}
 		buffer.WriteString("e")
 
@@ -64,12 +64,12 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 
 			buffer.WriteString(fmt.Sprintf("%v:%v", len(key), key))
 
-			var item_str string
-			item_str, err = item.Bencode()
+			var encoded []byte
+			encoded, err = item.Bencode()
 			if err != nil {
 				return
 			}
-			buffer.WriteString(item_str)
+			buffer.Write(encoded)
 		}
 		buffer.WriteString("e")
 
@@ -80,7 +80,7 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 	return
 }
 
-func (bval Value) Bencode() (str string, err error) {
+func (bval Value) Bencode() (encoded []byte, err error) {
 	var buffer bytes.Buffer
 
 	// TODO: Short-circuit if Marshaller
@@ -88,13 +88,13 @@ func (bval Value) Bencode() (str string, err error) {
 	err = bval.WriteBencoded(&buffer)
 
 	if err == nil {
-		str = buffer.String()
+		encoded = buffer.Bytes()
 	}
 
 	return
 }
 
-func Bencode(data interface{}) (bencoded string, err error) {
+func Bencode(data interface{}) (bencoded []byte, err error) {
 	var bval *Value
 	var bval_data Value
 	var ok bool
