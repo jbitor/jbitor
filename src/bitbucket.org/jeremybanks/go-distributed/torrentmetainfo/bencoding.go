@@ -14,12 +14,11 @@ func (metainfo T) MarshalBencodingValue() (bval *bencoding.Value, err error) {
 	if metainfo.Files == nil {
 		val["length"] = metainfo.Length
 	} else {
-		// Convert from []string to []interface{}:
 		files := make([]interface{}, len(*metainfo.Files))
 
 		for i, file := range *metainfo.Files {
+			// Convert path from []string to []interface{}:
 			path := make([]interface{}, len(file.Path))
-
 			for index, pathPart := range file.Path {
 				path[index] = pathPart
 			}
