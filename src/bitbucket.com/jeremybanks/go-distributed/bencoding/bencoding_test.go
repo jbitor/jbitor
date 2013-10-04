@@ -1,8 +1,23 @@
 package bencoding
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 // Test helpers
+
+type bencodableInt32 int32
+
+func (self bencodableInt32) BValue() *BValue {
+	val, err := NewBValue(int64(self))
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to create BValue: %v", err))
+	}
+
+	return val
+}
 
 func testEncodings(t *testing.T, encodings map[string]interface{}) {
 	for target, input := range encodings {
@@ -26,13 +41,15 @@ func testUnencodables(t *testing.T, unencodables []interface{}) {
 	}
 }
 
-func testDecodings(t *testing.T, decodings map[string]BValue) {
+func testDecodings(t *testing.T, decodings map[string]*BValue) {
 	for input, target := range decodings {
 		actual, err := Bdecode(input)
 
 		if err != nil {
 			t.Error("Error while decoding", input, "-", err)
-		} else if target != *actual {
+		} else if target != actual {
+			// XXX: I'm not sure if you can compare pointers like this...
+			// Is there any way to check for recursive equality of pointerful structs?
 			t.Error("Decoding", input, "produced", actual, "instead of", target)
 		}
 	}
@@ -52,11 +69,13 @@ func testUndecodables(t *testing.T, undecodables []string) {
 
 func TestIntegerEncoding(t *testing.T) {
 	testEncodings(t, map[string]interface{}{
-		"i3e":  int64(3),
-		"i-3e": int64(-3),
-		"i6e":  int64(6),
-		"i0e":  int64(0),
-		"i16e": BValue{t: INTEGER, value: int64(16)}, // already a BValue
+		"i3e":   int64(3),
+		"i-3e":  int64(-3),
+		"i6e":   int64(6),
+		"i0e":   int64(0),
+		"i16e":  BValue{t: INTEGER, value: int64(16)},  // already a BValue
+		"i17e":  &BValue{t: INTEGER, value: int64(17)}, // already a *BValue
+		"i-99e": bencodableInt32(-99),
 	})
 
 	testUnencodables(t, []interface{}{

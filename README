@@ -4,13 +4,15 @@ Copyright 2013 Jeremy Banks <jeremy@jeremybanks.ca>
 
 Some tasks:
 
-- Bencoding from specific data structure
-- Bencoding tests
----
-- Bdecoding to specific data structure
-- Bdecoding tests
-- An interface for types that can be b(en/de)coded.
-- Torrent metadata class
-- Torrent metadata encoding
-- Torrent metadata decoding
-- Torrent metadata verification
+[ x ] Bencoding from specific data structure
+[ x ] Bencoding tests
+[ x ] Bencodable interface with tests
+[   ] Check err every time you .() coerce values
+[   ] Bdecoding to specific data structure
+[   ] Bdecoding tests
+[   ] Bdecodable interface with tests
+[   ] An interface for types that can be b(en/de)coded.
+[   ] Torrent metadata class
+[   ] Torrent metadata encoding
+[   ] Torrent metadata decoding
+[   ] Torrent metadata verification
