@@ -1,7 +1,7 @@
 package torrentmetainfo
 
 import (
-	"bitbucket.com/jeremybanks/go-distributed/bencoding"
+	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 )
 
 func (metainfo T) MarshalBencodingValue() (bval *bencoding.Value, err error) {

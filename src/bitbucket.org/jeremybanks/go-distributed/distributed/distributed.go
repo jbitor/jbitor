@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.com/jeremybanks/go-distributed/bencoding"
+	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"fmt"
 )
 
