@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 /*
@@ -51,8 +52,20 @@ func (bval BValue) WriteBencoded(buffer *bytes.Buffer) (err error) {
 	case DICTIONARY:
 		// FIXME: keys must be sorted.
 
+		keys := make([]string, len(bval.value.(map[string]BValue)))
+
+		i := 0
+		for key, _ := range bval.value.(map[string]BValue) {
+			keys[i] = key
+			i += 1
+		}
+
+		sort.Strings(keys)
+
 		buffer.WriteString("d")
-		for key, item := range bval.value.(map[string]BValue) {
+		for _, key := range keys {
+			item := bval.value.(map[string]BValue)[key]
+
 			buffer.WriteString(
 				fmt.Sprintf("%v:%v", len(key), key))
 
@@ -101,8 +114,8 @@ func Bencode(data interface{}) (bencoded string, err error) {
 }
 
 func NewBValue(data interface{}) (bval *BValue, err error) {
-	// Uses reflection to convert an arbitrary object to a
-	// bencoding.Value if possible.
+	// Uses reflection to convert structures of int64, string,
+	// map[string]interface{} and list[interface{}] to BValues.
 
 	t := reflect.TypeOf(data)
 

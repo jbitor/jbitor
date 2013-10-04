@@ -2,48 +2,101 @@ package bencoding
 
 import "testing"
 
-func TestEncodeString(t *testing.T) {
-	encoded, _ := Bencode("spam")
-	if encoded != "4:spam" {
-		t.Fail()
+// Test helpers
+
+func testEncodings(t *testing.T, encodings map[string]interface{}) {
+	for target, input := range encodings {
+		actual, err := Bencode(input)
+
+		if err != nil {
+			t.Error("Error while encoding", input, "-", err)
+		} else if target != actual {
+			t.Error("Encoding", input, "produced", actual, "instead of", target)
+		}
 	}
 }
 
-func TestEncodeInteger(t *testing.T) {
-	encoded, _ := Bencode(int64(3))
-	if encoded != "i3e" {
-		t.Error("encoded is", encoded)
-	}
+func testUnencodables(t *testing.T, unencodables []interface{}) {
+	for _, unencodable := range unencodables {
+		_, err := Bencode(unencodable)
 
-	encoded, _ = Bencode(int64(-3))
-	if encoded != "i-3e" {
-		t.Error("encoded is", encoded)
-	}
-
-	encoded, _ = Bencode(int64(0))
-	if encoded != "i0e" {
-		t.Error("encoded is", encoded)
+		if err == nil {
+			t.Error("No error when attempting to encode unencodable", unencodable)
+		}
 	}
 }
 
-func TestEncodeList(t *testing.T) {
-	encoded, _ := Bencode([]interface{}{"spam", "eggs"})
-	if encoded != "l4:spam4:eggse" {
-		t.Error("encoded is", encoded)
+func testDecodings(t *testing.T, decodings map[string]BValue) {
+	for input, target := range decodings {
+		actual, err := Bdecode(input)
+
+		if err != nil {
+			t.Error("Error while decoding", input, "-", err)
+		} else if target != *actual {
+			t.Error("Decoding", input, "produced", actual, "instead of", target)
+		}
 	}
 }
 
-func TestEncodeDictionary(t *testing.T) {
-	encoded, _ := Bencode(map[string]interface{}{"cow": "moo", "spam": "eggs"})
-	if encoded != "d3:cow3:moo4:spam4:eggse" {
-		t.Error("encoded is", encoded)
-	}
+func testUndecodables(t *testing.T, undecodables []string) {
+	for _, undecodable := range undecodables {
+		_, err := Bdecode(undecodable)
 
-	encoded, _ = Bencode((map[string]interface{}{"spam": []interface{}{"a", "bee"}}))
-	if encoded != "d4:spaml1:a1:bee" {
-		t.Error("encoded is", encoded)
+		if err == nil {
+			t.Error("No error when attempting to decode undecodable", undecodable)
+		}
 	}
 }
 
-// TODO: add tests asserting that an error happens
-// also, test for error codes above
+// Test cases
+
+func TestIntegerEncoding(t *testing.T) {
+	testEncodings(t, map[string]interface{}{
+		"i3e":  int64(3),
+		"i-3e": int64(-3),
+		"i6e":  int64(6),
+		"i0e":  int64(0),
+		"i16e": BValue{t: INTEGER, value: int64(16)}, // already a BValue
+	})
+
+	testUnencodables(t, []interface{}{
+		int32(99),  // wrong integer type
+		uint64(99), // wrong integer type
+	})
+
+	testUndecodables(t, []string{
+		"i-0e", // non-canonical encoding
+		"i01e", // non-canonical encoding
+	})
+}
+
+func TestListEncoding(t *testing.T) {
+	testEncodings(t, map[string]interface{}{
+		"l4:spam4:eggse": []interface{}{"spam", "eggs"},
+	})
+}
+
+func TestDictionaryEncoding(t *testing.T) {
+	testEncodings(t, map[string]interface{}{
+		"d3:cow3:moo4:spam4:eggse": map[string]interface{}{"cow": "moo", "spam": "eggs"},
+		"d4:spaml1:a1:bee":         map[string]interface{}{"spam": []interface{}{"a", "b"}},
+	})
+
+	testUndecodables(t, []string{
+		("d1:bi1e1:ai2ee"), // keys out of order
+	})
+}
+
+func TestEncodeUnverifiedExample(t *testing.T) {
+	testEncodings(t, map[string]interface{}{
+		"d6:lengthi512e4:miscd5:hello6:World!e4:name9:Test Data12:piece lengthi1024e6:pieces20:\x00234567890123456789\xFFe": map[string]interface{}{
+			"piece length": int64(1024),
+			"pieces":       "\x00234567890123456789\xFF",
+			"name":         "Test Data",
+			"length":       int64(512),
+			"misc": map[string]interface{}{
+				"hello": "World!",
+			},
+		},
+	})
+}
