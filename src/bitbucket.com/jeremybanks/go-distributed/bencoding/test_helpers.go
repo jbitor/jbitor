@@ -69,14 +69,13 @@ func (self bencodableInt32) MarshalBencodingValue() (bval *Value, err error) {
 }
 
 func (self bencodableInt32) MarshalBencoding() (encoded []byte, err error) {
-	encoded, err = Bencode(self)
-	return
+	return Bencode(self)
 }
 
 func (self bencodableInt32) UnmarshalBencodingValue(bval *Value) (err error) {
-	value, ok := bval.value.(int64)
+	value, ok := bval.Value.(int64)
 	if !ok {
-		err = errors.New(fmt.Sprintf("%s is not an int64", bval.value))
+		err = errors.New(fmt.Sprintf("%s is not an int64", bval.Value))
 	} else {
 		self = bencodableInt32(value)
 	}

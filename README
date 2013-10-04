@@ -10,12 +10,14 @@ Some tasks:
 [ x ] Check err every time you .() coerce values
 [ x ] Use "marshalling" naming conventions like json
 [ x ] Use []byte IO instead of strings
+[ x ] Torrent metadata struct
+[ x ] Torrent metadata to bencoding
+[   ] Torrent metadata to bencoding tests
+[   ] Torrent metadata from bencoding
 [   ] Support JSON marshalling of bencoding.Value
+[   ] JSON marshalling support for torrent metadata through bencoding
 [   ] More explicit tests using interfaces
 [   ] Bdecoding to specific data structure
 [   ] Bdecoding tests
 [   ] Bdecodable interface with tests
-[   ] Torrent metadata class
-[   ] Torrent metadata encoding
-[   ] Torrent metadata decoding
 [   ] Torrent metadata verification

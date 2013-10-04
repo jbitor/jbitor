@@ -10,8 +10,8 @@ const (
 )
 
 type Value struct {
-	t     ValueType
-	value interface{}
+	T     ValueType
+	Value interface{}
 }
 
 type Bencodable interface {

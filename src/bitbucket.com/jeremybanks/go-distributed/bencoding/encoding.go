@@ -8,9 +8,9 @@ import (
 )
 
 func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
-	switch bval.t {
+	switch bval.T {
 	case STRING:
-		value, ok := bval.value.(string)
+		value, ok := bval.Value.(string)
 		if !ok {
 			panic("STRING BValue did not have a string value.")
 		}
@@ -18,7 +18,7 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 		buffer.WriteString(fmt.Sprintf("%v:%v", len(value), value))
 
 	case INTEGER:
-		value, ok := bval.value.(int64)
+		value, ok := bval.Value.(int64)
 		if !ok {
 			panic("INTEGER BValue did not have an int64 value.")
 		}
@@ -26,7 +26,7 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 		buffer.WriteString(fmt.Sprintf("i%ve", value))
 
 	case LIST:
-		value, ok := bval.value.([]*Value)
+		value, ok := bval.Value.([]*Value)
 		if !ok {
 			panic("LIST BValue did not have a []*Value value.")
 		}
@@ -43,7 +43,7 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 		buffer.WriteString("e")
 
 	case DICTIONARY:
-		value, ok := bval.value.(map[string]*Value)
+		value, ok := bval.Value.(map[string]*Value)
 		if !ok {
 			panic("LIST BValue did not have a []*Value value.")
 		}
@@ -74,7 +74,7 @@ func (bval Value) WriteBencoded(buffer *bytes.Buffer) (err error) {
 		buffer.WriteString("e")
 
 	default:
-		err = errors.New(fmt.Sprintf("Illegal Value.t: %v", bval.t))
+		err = errors.New(fmt.Sprintf("Illegal Value.T: %v", bval.T))
 	}
 
 	return

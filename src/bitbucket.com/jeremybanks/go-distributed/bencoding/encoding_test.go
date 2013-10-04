@@ -10,8 +10,8 @@ func TestIntegerEncoding(t *testing.T) {
 		"i-3e":  int64(-3),
 		"i6e":   int64(6),
 		"i0e":   int64(0),
-		"i16e":  Value{t: INTEGER, value: int64(16)},  // already a Value
-		"i17e":  &Value{t: INTEGER, value: int64(17)}, // already a *Value
+		"i16e":  Value{T: INTEGER, Value: int64(16)},  // already a Value
+		"i17e":  &Value{T: INTEGER, Value: int64(17)}, // already a *Value
 		"i-99e": bencodableInt32(-99),
 	})
 

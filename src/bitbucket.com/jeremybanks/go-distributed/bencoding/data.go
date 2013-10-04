@@ -13,13 +13,13 @@ func NewValue(data interface{}) (bval *Value, err error) {
 	// Also supports any BEncodable type.
 
 	if value, ok := data.(int64); ok {
-		bval = &(Value{t: INTEGER, value: value})
+		bval = &(Value{T: INTEGER, Value: value})
 	} else if value, ok := data.(string); ok {
-		bval = &(Value{t: STRING, value: value})
+		bval = &(Value{T: STRING, Value: value})
 	} else if value, ok := data.(map[string]interface{}); ok {
 		bvals := make(map[string]*Value)
 
-		bval = &(Value{t: DICTIONARY, value: bvals})
+		bval = &(Value{T: DICTIONARY, Value: bvals})
 
 		for key, item := range value {
 			var item_bval *Value
@@ -35,7 +35,7 @@ func NewValue(data interface{}) (bval *Value, err error) {
 	} else if value, ok := data.([]interface{}); ok {
 		bvals := make([]*Value, len(value))
 
-		bval = &(Value{t: LIST, value: bvals})
+		bval = &(Value{T: LIST, Value: bvals})
 
 		for index, item := range value {
 			var item_bval *Value
@@ -74,18 +74,18 @@ func (bval *Value) UnmarshalJSON([]byte) error {
 func (bval *Value) String() string {
 	// Returns a JSON-like representation of this bencoding.Value.
 
-	switch bval.t {
+	switch bval.T {
 	case STRING:
-		return bval.value.(string)
+		return bval.Value.(string)
 
 	case INTEGER:
-		return fmt.Sprintf("%v", bval.value.(int64))
+		return fmt.Sprintf("%v", bval.Value.(int64))
 
 	case LIST:
 		var buffer bytes.Buffer
 		buffer.WriteString("[")
 
-		for index, item := range bval.value.([]*Value) {
+		for index, item := range bval.Value.([]*Value) {
 			if index > 0 {
 				buffer.WriteString(", ")
 			}
@@ -102,7 +102,7 @@ func (bval *Value) String() string {
 
 		first := true
 
-		for key, item := range bval.value.(map[string]*Value) {
+		for key, item := range bval.Value.(map[string]*Value) {
 			if first {
 				first = false
 			} else {
@@ -120,5 +120,5 @@ func (bval *Value) String() string {
 		return buffer.String()
 	}
 
-	return fmt.Sprintf("<illegal Value.t: %v>", bval.t)
+	return fmt.Sprintf("<illegal Value.T: %v>", bval.T)
 }
