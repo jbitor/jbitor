@@ -22,6 +22,20 @@ Some tasks:
 [   ] Bdecoding to specific data structure
 [   ] Bdecoding tests
 [   ] Bdecodable interface with tests
+[   ] ./distributed bencode_json < x.torrent.json > x.torrent
+[   ] ./distributed bdecode_json < x.torrent > x.torrent.json
+[   ] ./distributed torrent info < x.torrrent
 [   ] Torrent metadata generation
 [   ] Torrent metadata verification
+[   ] ./distributed torrent verify ROOT < x.torrrent
 [   ] Make bencoding source of truth for torrent info, so that you can preserve the hash.
+
+[   ] Implement a DHT peer
+[   ] Implement BitTorrent peer who can join swarm - no downloading yet
+[   ] Implement extension protocol for BitTorrent peer
+[   ] Implement metadata download from swarm (BEP-9)
+[   ] Implement BitTorrent downloading
+[   ] Implement Message Stream Encryption/obfuscation for BitTorrent peer
+[   ] Consider Fast Extension (BEP-6)
+[   ] Consider HTTP seeding per BEP-17 and BEP-19
+[   ] Support partial seeds per BEP-21
