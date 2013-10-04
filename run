@@ -6,7 +6,7 @@ export PATH="$PATH:$GOPATH/bin"
 
 echo "Formatting..."
 go fmt bitbucket.com/jeremybanks/go-distributed/bencoding
-go fmt bitbucket.com/jeremybanks/go-distributed/main
+go fmt bitbucket.com/jeremybanks/go-distributed/distributed
 
 echo
 echo "Testing..."
@@ -15,11 +15,11 @@ go test -run=. -bench=NONE bitbucket.com/jeremybanks/go-distributed/bencoding
 echo
 echo "Installing to ./bin/..."
 
-go install bitbucket.com/jeremybanks/go-distributed/main
+go install bitbucket.com/jeremybanks/go-distributed/distributed
 
 echo
 echo "Running..."
 
-main $*
+distributed $*
 
 echo
