@@ -15,7 +15,6 @@ Some tasks:
 [ x ] Torrent metadata to bencoding tests
 [   ] - including tests for multiple-piece torrents
 [   ] - including tests for failures, and sanity assertions
-[   ] rename: bencoding.Marshal, bending.Unmarshal
 [   ] consider defining custom types for bval.values.
 [   ] Torrent metadata from bencoding
 [   ] Support JSON marshalling of bencoding.Value
