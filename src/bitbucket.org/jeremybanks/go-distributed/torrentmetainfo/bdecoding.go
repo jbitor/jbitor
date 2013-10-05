@@ -31,3 +31,23 @@ func (metainfo T) UnmarshalBencoding(encoded []byte) (err error) {
 	}
 	return
 }
+
+func (metainfo T) UnmarshalTorrentBencoding(encoded []byte) (err error) {
+	// Loads metadata from .torrent file data.
+	//
+	// This is different from UnmarshalBencoding because that function
+	// only takes the metainfo section of the torrent data, whereas this
+	// takes the entire torrent file data.
+	var torrentBval *bencoding.Value
+	torrentBval, err = bencoding.Bdecode(encoded)
+	if err == nil {
+		bval, ok := torrentBval.Value.(map[string]interface{})["info"]
+
+		if ok {
+			err = metainfo.UnmarshalBencodingValue(bval.(*bencoding.Value))
+		} else {
+			err = errors.New("Couldn't find 'info' key in torrent data.")
+		}
+	}
+	return
+}

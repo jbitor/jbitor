@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bitbucket.org/jeremybanks/go-distributed/torrentmetainfo"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -44,5 +46,36 @@ func cmdTorrent(args []string) {
 }
 
 func cmdTorrentInfo(args []string) {
-	panic("torrent info subcommand not implemented")
+	var data []byte
+	var err error
+
+	if len(args) == 1 {
+		filename := args[0]
+		data, err = ioutil.ReadFile(filename)
+	} else if len(args) == 0 {
+		data, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		fmt.Fprintf(os.Stderr, "Usage: %v torrent info [FILE]\n", os.Args[0])
+		os.Exit(1)
+		return
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
+		return
+	}
+
+	var metainfo torrentmetainfo.T
+	err = metainfo.UnmarshalTorrentBencoding(data)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error intepreting torrent data: %v\n", err)
+	}
+
+	hash, _ := metainfo.HexHash()
+	fmt.Println("infohash:", hash)
+	fmt.Println("    name:", metainfo.Name)
+	fmt.Println("  length:", metainfo.Length)
+	fmt.Println("   files:", metainfo.Files)
 }
