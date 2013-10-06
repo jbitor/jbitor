@@ -1,0 +1,137 @@
+
+Some tasks:
+
+[ x ] Bencoding from specific data structure
+[ x ] Bencoding tests
+[ x ] Bencodable interface with tests
+[ x ] Check err every time you .() coerce values
+[ x ] Use "marshalling" naming conventions like json
+[ x ] Use []byte IO instead of strings
+[ x ] Torrent metadata struct
+[ x ] Torrent metadata to bencoding
+[ x ] Torrent metadata to bencoding tests
+[   ] - including tests for multiple-piece torrents
+[   ] - including tests for failures, and sanity assertions
+[   ] consider defining custom types for bval.values.
+[   ] Torrent metadata from bencoding
+[   ] Support JSON marshalling of bencoding.Value
+[   ] JSON marshalling support for torrent metadata through bencoding
+[   ] More explicit tests using interfaces
+[   ] Bdecoding to specific data structure
+[   ] Bdecoding tests
+[   ] Bdecodable interface with tests
+[   ] ./distributed bencode_json < x.torrent.json > x.torrent
+[   ] ./distributed bdecode_json < x.torrent > x.torrent.json
+[   ] ./distributed torrent info < x.torrrent
+[   ] Torrent metadata generation
+[   ] Torrent metadata verification
+[   ] ./distributed torrent verify ROOT < x.torrrent
+[   ] Make bencoding source of truth for torrent info, so that you can preserve the hash.
+
+[   ] Implement a DHT peer
+[   ] Implement BitTorrent peer who can join swarm - no downloading yet
+[   ] Implement extension protocol for BitTorrent peer
+[   ] Implement metadata download from swarm (BEP-9)
+[   ] Implement BitTorrent downloading
+[   ] Implement Message Stream Encryption/obfuscation for BitTorrent peer
+[   ] Consider Fast Extension (BEP-6)
+[   ] Consider HTTP seeding per BEP-17 and BEP-19
+[   ] Support partial seeds per BEP-21
+
+---
+
+
+= package torrentmeta
+
+type T
+.Data bencoding.T
+
+.hash string
+.SetHash(string)
+
+.IntegrityError() (error)
+    // confirms that there is no known conflicting data.
+    // remember to check lengths of slices and stuff
+.IsComplete() (bool, error)
+    // do we have all data and none conflicts? error is .IntegrityError().
+.Hash() (string, error)
+    // error may be that we don't have data, or if this doesn't match
+    // a .hash that was .SetHash()ed.
+.HexHash() (string, error)
+
+.Name() string
+.Length() int64
+.Files() []TorrentFileMeta
+.PieceLength() int64
+.Pieces() []string
+
+
+type TorrentFileMeta
+.Data bencoding.T
+
+.Name()
+.Length() int64
+.Offset() int64
+
+= package TorrentDownload
+
+type torrentdownload.T
+.Metainfo TorrentMeta
+.TargetPath string
+.IsComplete() bool
+.Completion() float64
+.Files() []TorrentDownloadFile
+.Pieces() []TorrentDownloadPiece
+
+
+type torrentdownload.File
+.TorrentDownload T
+.Name() string
+.Length() int64
+.IsComplete() bool
+.Completion() float64
+.Pieces() []Piece
+.Offset() int64
+.FirstPieceOffset int64
+.LastPieceLength int64
+
+.Open() (os.File, error)
+
+
+type torrentdownload.Piece
+.TorrentDownload T
+.Index int64
+.Offset() int64
+.Length() int64
+.File File
+.FileOffset() int64
+
+.Hash() string  //  pulled out of .TorrentDownload.data...pieces[.Index]
+
+.Data() string // reads from file
+.SetData(string)  // writes to file, checks against Hash()
+
+
+
+type torrentdownload.PotentialPiece
+.Piece Piece
+.Peer Peer
+.IsComplete() bool
+.Completion() float
+.Blocks [len(.Piece)][16384]byte  // blocks we haven't been sent are nil
+
+
+
+
+type torrentdownload.TCPPeer implements Peer
+.Download T
+.Addr TCPAddr
+
+.Score() float64 (0.0 to 1.0)
+.RecievedPieces int64
+.RecievedValid int64
+.RecievedInvalid int64
+
+
+= package torrentdownloadmanager
+
