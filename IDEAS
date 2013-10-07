@@ -1,3 +1,17 @@
+For now, we want to come up with the SIMPLEST POSSIBLE IMPLEMENTATION
+which can:
+
+- load a torrent file into immutable metadata
+- verify that data
+
+It does not have to preserve additional data so as to be able to
+re-export it losslessly. OR AT ALL!
+
+A single file! Where piece size = file size!
+
+
+===
+
 
 Some tasks:
 
@@ -140,4 +154,3 @@ type torrentdownload.TCPPeer implements Peer
 
 
 = package torrentdownloadmanager
-
