@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
-
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
+cd "$GOPATH"
 echo "Formatting..."
 go fmt bitbucket.org/jeremybanks/go-distributed/bencoding
 go fmt bitbucket.org/jeremybanks/go-distributed/cli

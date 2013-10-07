@@ -6,31 +6,43 @@ import (
 	"testing"
 )
 
-func TestRoundTrip(t *testing.T) {
-	var value Bencodable
-	for _, value = range []Bencodable{
-		Int(-1),
-		Int(0),
-		Int(1),
-		String(""),
-		String("helloe worldee"),
-		List{Int(-1), Int(-1), Int(-2), Int(0), Int(4), Int(5)},
-		List{Int(0), String("Hello worlde")},
-		Dict{"hello": List{String("world"), Int(2), String("you")}},
-	} {
-		encoded, err := Encode(value)
+func Test(t *testing.T) {
+	testCases := map[string]Bencodable{
+		"i-1e":   Int(-1),
+		"i0e":    Int(0),
+		"i1e":    Int(1),
+		"i1023e": Int(1023),
+		"li1ei2ed2:abl1:ci4e1:de2:aai1eeledee": List{
+			Int(1), Int(2), Dict{
+				"ab": List{String("c"), Int(4), String("d")},
+				"aa": Int(1),
+			}, List{}, Dict{},
+		},
+	}
+
+	for originalEncodedStr, originalDecoded := range testCases {
+		originalEncoded := []byte(originalEncodedStr)
+
+		encoded, err := Encode(originalDecoded)
 		if err != nil {
-			t.Error("Error encoding", value, err)
-			continue
-		}
-		decoded, err := Decode(encoded)
-		if err != nil {
-			t.Error("After encoding", value, ", error decoding", strconv.Quote(string(encoded)), err)
-			continue
+			t.Error("Error encoding", originalDecoded, err)
+		} else {
+			if !reflect.DeepEqual(encoded, originalEncoded) {
+				t.Error(
+					"Encoded value", strconv.Quote(string(encoded)),
+					"does not equal expected value", strconv.Quote(string(originalEncoded)))
+			}
 		}
 
-		if !reflect.DeepEqual(value, decoded) {
-			t.Error("Value did not safely round-trip", value, decoded)
+		decoded, err := Decode(originalEncoded)
+		if err != nil {
+			t.Error("Error decoding", strconv.Quote(string(originalEncoded)), err)
+		} else {
+			if !reflect.DeepEqual(decoded, originalDecoded) {
+				t.Error(
+					"Decoded value", decoded,
+					"does not equal expected value", originalDecoded)
+			}
 		}
 	}
 }
