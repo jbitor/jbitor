@@ -86,6 +86,9 @@ func cmdTorrentMake(args []string) {
 	hash := hasher.Sum(nil)
 	infoHashHex := hex.EncodeToString(hash)
 
+	fmt.Fprintf(os.Stderr, "Generated torrent btih=%v.", infoHashHex)
+	os.Stderr.Sync()
+
 	os.Stdout.Write(torrentData)
 	os.Stdout.Sync()
 
