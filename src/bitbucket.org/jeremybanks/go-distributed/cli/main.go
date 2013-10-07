@@ -56,18 +56,18 @@ func cmdTorrentMake(args []string) {
 
 	infoDict := makeSingleFileTorrentFromPath(args[0])
 
-	infoData, err := bencoding.Bencode(infoDict)
+	infoData, err := bencoding.Encode(infoDict)
 
 	if err != nil {
 		panic(err)
 	}
 
 	torrentDict := bencoding.Dict{
-		bencoding.Str("info"):     infoDict,
-		bencoding.Str("announce"): bencoding.Str("http://localhost/"),
+		"info":     infoDict,
+		"announce": bencoding.String("http://localhost/"),
 	}
 
-	torrentData, err := bencoding.Bencode(torrentDict)
+	torrentData, err := bencoding.Encode(torrentDict)
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error encoding torrent data:", err)
@@ -108,10 +108,10 @@ func makeSingleFileTorrentFromPath(path string) bencoding.Dict {
 	hash := hasher.Sum(nil)
 
 	infoDict := bencoding.Dict{
-		"name":         bencoding.Str(fileInfo.Name()),
+		"name":         bencoding.String(fileInfo.Name()),
 		"length":       bencoding.Int(fileInfo.Size()),
 		"piece length": bencoding.Int(fileInfo.Size()),
-		"pieces":       bencoding.Str(hash),
+		"pieces":       bencoding.String(hash),
 	}
 
 	if err != nil {
