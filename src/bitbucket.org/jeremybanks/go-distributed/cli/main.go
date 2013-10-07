@@ -2,10 +2,10 @@ package main
 
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
+	"bitbucket.org/jeremybanks/go-distributed/torrentutils"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -54,10 +54,16 @@ func cmdTorrentMake(args []string) {
 		return
 	}
 
-	infoDict := makeSingleFileTorrentFromPath(args[0])
+	infoDict, err := torrentutils.GenerateTorrentMetaInfo(torrentutils.CreationOptions{
+		Path:           args[0],
+		PieceLength:    524288,
+		ForceMultiFile: false,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	infoData, err := bencoding.Encode(infoDict)
-
 	if err != nil {
 		panic(err)
 	}
@@ -84,39 +90,4 @@ func cmdTorrentMake(args []string) {
 	os.Stdout.Sync()
 
 	_ = infoHashHex
-}
-
-func makeSingleFileTorrentFromPath(path string) bencoding.Dict {
-	file, err := os.Open(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	fileInfo, err := file.Stat()
-	if err != nil {
-		panic(err)
-	}
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		panic(err)
-	}
-
-	hasher := sha1.New()
-	hasher.Write(bytes)
-	hash := hasher.Sum(nil)
-
-	infoDict := bencoding.Dict{
-		"name":         bencoding.String(fileInfo.Name()),
-		"length":       bencoding.Int(fileInfo.Size()),
-		"piece length": bencoding.Int(fileInfo.Size()),
-		"pieces":       bencoding.String(hash),
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
-	return infoDict
 }
