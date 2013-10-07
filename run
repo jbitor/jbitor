@@ -1,16 +1,18 @@
 #!/bin/bash
+set -e
+
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
 echo "Formatting..."
 go fmt bitbucket.org/jeremybanks/go-distributed/bencoding
-go fmt bitbucket.org/jeremybanks/go-distributed/torrentmetainfo
+go fmt bitbucket.org/jeremybanks/go-distributed/torrentmeta
 go fmt bitbucket.org/jeremybanks/go-distributed/torrentdownload
 go fmt bitbucket.org/jeremybanks/go-distributed/torrentmanager
 go fmt bitbucket.org/jeremybanks/go-distributed/torrentmanager/cli
 echo
 echo "Installing packages..."
 go install bitbucket.org/jeremybanks/go-distributed/bencoding
-go install bitbucket.org/jeremybanks/go-distributed/torrentmetainfo
+go install bitbucket.org/jeremybanks/go-distributed/torrentmeta
 go install bitbucket.org/jeremybanks/go-distributed/torrentdownload
 go install bitbucket.org/jeremybanks/go-distributed/torrentmanager
 go install bitbucket.org/jeremybanks/go-distributed/torrentmanager/cli
@@ -18,7 +20,7 @@ go install bitbucket.org/jeremybanks/go-distributed/torrentmanager/cli
 echo
 echo "Testing..."
 go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/bencoding
-go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentmetainfo
+go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentmeta
 go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentdownload
 go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentmanager
 go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentmanager/cli
