@@ -53,7 +53,7 @@ type T
     // confirms that there is no known conflicting data.
     // remember to check lengths of slices and stuff
 .IsComplete() (bool, error)
-    // do we have all data and none conflicts? error is .IntegrityError().
+    // do we have all metadata and none conflicts? error == .IntegrityError().
 .Hash() (string, error)
     // error may be that we don't have data, or if this doesn't match
     // a .hash that was .SetHash()ed.
@@ -78,16 +78,19 @@ type TorrentFileMeta
 type torrentdownload.T
 .Metainfo TorrentMeta
 .TargetPath string
+.Completed() T->
 .IsComplete() bool
 .Completion() float64
 .Files() []TorrentDownloadFile
 .Pieces() []TorrentDownloadPiece
+.Open() (*File, error)  // error if multi-file torrent
 
 
 type torrentdownload.File
 .TorrentDownload T
 .Name() string
 .Length() int64
+.Completed() File->
 .IsComplete() bool
 .Completion() float64
 .Pieces() []Piece
@@ -101,6 +104,8 @@ type torrentdownload.File
 type torrentdownload.Piece
 .TorrentDownload T
 .Index int64
+.IsComplete() bool
+.Completed() Piece->
 .Offset() int64
 .Length() int64
 .File File
@@ -117,6 +122,7 @@ type torrentdownload.PotentialPiece
 .Piece Piece
 .Peer Peer
 .IsComplete() bool
+.Completed() Piece->
 .Completion() float
 .Blocks [len(.Piece)][16384]byte  // blocks we haven't been sent are nil
 
