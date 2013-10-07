@@ -85,8 +85,10 @@ func (bint Int) WriteBencodedTo(writer io.Writer) error {
 }
 
 func decodeNextIntFrom(buffer *bytes.Buffer) (Int, error) {
-	// discard first byte which we know to be "i"
-	buffer.ReadByte()
+	initial, err := buffer.ReadByte()
+	if initial != 'i' || err != nil {
+		panic("How is this not an integer?")
+	}
 
 	firstByte, err := buffer.ReadByte()
 	if err != nil {
@@ -118,7 +120,7 @@ InterpretingInitial:
 			if err != nil {
 				return -1, err
 			}
-			if remainingByte != byte("e"[0]) {
+			if remainingByte != byte('e') {
 				return -1, errors.New("Unexpected leading zero in integer value.")
 			}
 			return 0, nil
@@ -196,7 +198,33 @@ func (blist List) WriteBencodedTo(writer io.Writer) error {
 }
 
 func decodeNextListFrom(buffer *bytes.Buffer) (List, error) {
-	return nil, errors.New("NOT IMPLEMENTED")
+	initial, err := buffer.ReadByte()
+	if initial != 'l' || err != nil {
+		panic("How is this not a list?")
+	}
+
+	result := make(List, 0)
+
+AccumulateItems:
+	for {
+		nextByte, err := buffer.ReadByte()
+		switch {
+		case err != nil:
+			return nil, err
+		case nextByte == 'e':
+			break AccumulateItems
+		default:
+			buffer.UnreadByte()
+			nextValue, err := decodeNextFrom(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, nextValue)
+		}
+	}
+
+	return result, nil
 }
 
 func (bdict Dict) WriteBencodedTo(writer io.Writer) error {
@@ -225,5 +253,10 @@ func (bdict Dict) WriteBencodedTo(writer io.Writer) error {
 }
 
 func decodeNextDictFrom(buffer *bytes.Buffer) (Dict, error) {
+	initial, err := buffer.ReadByte()
+	if initial != 'd' || err != nil {
+		panic("How is this not a dictionary?")
+	}
+
 	return nil, errors.New("NOT IMPLEMENTED")
 }

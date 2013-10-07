@@ -13,7 +13,8 @@ func TestRoundTrip(t *testing.T) {
 		Int(0),
 		Int(1),
 		// String(""),
-		// String("helloe world"),
+		// String("helloe worldee"),
+		List{Int(-1), Int(-1), Int(-2), Int(0), Int(4), Int(5)},
 		// List{Int(0), String("Hello worlde")},
 		// Dict{"hello": List{String("world"), Int(2), String("you")}},
 	} {
