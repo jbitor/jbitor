@@ -19,5 +19,5 @@ go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentutils
 go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/cli
 echo
 echo "Running..."
-bin/cli torrent make bin/cli > test.torrent
+bin/cli torrent make . > test.torrent
 echo

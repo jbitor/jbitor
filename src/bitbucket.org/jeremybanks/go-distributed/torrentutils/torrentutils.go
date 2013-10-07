@@ -5,8 +5,64 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 )
+
+type pieceHasher struct {
+	PieceLength int64
+	PieceHashes [][]byte
+	PieceBuffer []byte
+}
+
+func newPieceHasher(pieceLength int64) pieceHasher {
+	return pieceHasher{
+		PieceLength: pieceLength,
+		PieceHashes: [][]byte{},
+		PieceBuffer: []byte{},
+	}
+}
+
+type pieceHasherWrapperWriter struct {
+	hasher *pieceHasher
+}
+
+func (wrapper pieceHasherWrapperWriter) Write(data []byte) (int, error) {
+	return wrapper.Write(data)
+}
+
+func (self *pieceHasher) Writer() io.Writer {
+	return pieceHasherWrapperWriter{hasher: self}
+}
+
+func (self *pieceHasher) Write(data []byte) (int, error) {
+	written := 0
+	self.PieceBuffer = bytes.Join([][]byte{self.PieceBuffer, data}, []byte(""))
+
+	for int64(len(self.PieceBuffer)) >= self.PieceLength {
+		piece := self.PieceBuffer[:self.PieceLength]
+
+		hasher := sha1.New()
+		hasher.Write(piece)
+		written += len(piece)
+		self.PieceHashes = append(self.PieceHashes, hasher.Sum(nil))
+
+		self.PieceBuffer = self.PieceBuffer[self.PieceLength:]
+	}
+
+	return written, nil
+}
+
+func (self *pieceHasher) Pieces() []byte {
+	piecesData := bytes.Join(self.PieceHashes, []byte(""))
+	if len(self.PieceBuffer) > 0 {
+		hasher := sha1.New()
+		hasher.Write(self.PieceBuffer)
+		piecesData = bytes.Join([][]byte{piecesData, hasher.Sum(nil)}, []byte(""))
+	}
+	return piecesData
+}
 
 type CreationOptions struct {
 	Path           string
@@ -15,65 +71,87 @@ type CreationOptions struct {
 }
 
 func GenerateTorrentMetaInfo(options CreationOptions) (bencoding.Dict, error) {
-	file, err := os.Open(options.Path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	fileInfo, err := file.Stat()
+	fileInfo, err := os.Stat(options.Path)
 	if err != nil {
 		return nil, err
 	}
 
 	multiFile := fileInfo.IsDir() || options.ForceMultiFile
 
+	pieces := make([]byte, 0)
+
+	fileList := bencoding.List{}
+
+	pieceHasher := newPieceHasher(options.PieceLength)
+
 	if multiFile {
-		panic("multiFile not implemented yet")
-	}
+		err := filepath.Walk(options.Path, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
 
-	pieces := make([][]byte, 0)
+			if info.IsDir() {
+				return nil
+			}
 
-	if fileInfo.Size() == 0 {
-		hasher := sha1.New()
-		pieces = append(pieces, hasher.Sum(nil))
+			relPath, err := filepath.Rel(options.Path, path)
+			if err != nil {
+				return err
+			}
+
+			pathList := bencoding.List{}
+
+			for _, component := range filepath.SplitList(relPath) {
+				pathList = append(pathList, bencoding.String(component))
+			}
+
+			fileDict := bencoding.Dict{
+				"path":   pathList,
+				"length": bencoding.Int(info.Size()),
+			}
+
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			pieceHasher.Write(data)
+
+			fileList = append(fileList, fileDict)
+
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		offset := int64(0)
+		if fileInfo.Size() > 0 {
+			file, err := os.Open(options.Path)
+			defer file.Close()
 
-		for {
-			pieceData := make([]byte, options.PieceLength)
-			pieceSize, err := file.Read(pieceData)
-			pieceData = pieceData[:pieceSize]
-
-			if err != nil && err != io.EOF {
+			if err != nil {
 				return nil, err
 			}
-			if pieceSize == 0 {
-				if offset != fileInfo.Size() {
-					panic("Unexpected byte shortage")
-				}
-				break
-			}
 
-			hasher := sha1.New()
-			hasher.Write(pieceData)
-			pieces = append(pieces, hasher.Sum(nil))
-			offset += int64(pieceSize)
+			io.Copy(pieceHasher.Writer(), file)
 
-			if err == io.EOF || int64(pieceSize) < options.PieceLength {
-				if offset != fileInfo.Size() {
-					panic("Unexpected byte shortage")
-				}
-				break
-			}
+			file.Close()
 		}
 	}
 
+	pieces = pieceHasher.Pieces()
+
 	infoDict := bencoding.Dict{
 		"name":         bencoding.String(fileInfo.Name()),
-		"length":       bencoding.Int(fileInfo.Size()),
 		"piece length": bencoding.Int(options.PieceLength),
-		"pieces":       bencoding.String(bytes.Join(pieces, []byte{})),
+		"pieces":       bencoding.String(pieces),
+	}
+
+	if multiFile {
+		infoDict["files"] = fileList
+	} else {
+		infoDict["length"] = bencoding.Int(fileInfo.Size())
 	}
 
 	if err != nil {
