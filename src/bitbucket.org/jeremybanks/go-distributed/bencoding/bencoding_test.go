@@ -12,11 +12,11 @@ func TestRoundTrip(t *testing.T) {
 		Int(-1),
 		Int(0),
 		Int(1),
-		// String(""),
-		// String("helloe worldee"),
+		String(""),
+		String("helloe worldee"),
 		List{Int(-1), Int(-1), Int(-2), Int(0), Int(4), Int(5)},
-		// List{Int(0), String("Hello worlde")},
-		// Dict{"hello": List{String("world"), Int(2), String("you")}},
+		List{Int(0), String("Hello worlde")},
+		Dict{"hello": List{String("world"), Int(2), String("you")}},
 	} {
 		encoded, err := Encode(value)
 		if err != nil {

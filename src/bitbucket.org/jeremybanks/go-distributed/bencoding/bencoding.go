@@ -58,18 +58,19 @@ func decodeNextFrom(buffer *bytes.Buffer) (Bencodable, error) {
 
 	var result Bencodable
 
-	switch string(nextByte) {
-	case "i":
+	switch nextByte {
+	case 'i':
 		result, err = decodeNextIntFrom(buffer)
-	case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		result, err = decodeNextStringFrom(buffer)
-	case "l":
+	case 'l':
 		result, err = decodeNextListFrom(buffer)
-	case "d":
+	case 'd':
 		result, err = decodeNextDictFrom(buffer)
 	default:
 		err = errors.New(fmt.Sprintf(
-			"Unexpected initial byte in bencoded data: %v", nextByte))
+			"Unexpected initial byte in bencoded data: %v",
+			strconv.Quote(string(nextByte))))
 	}
 
 	if err != nil {
@@ -99,8 +100,8 @@ func decodeNextIntFrom(buffer *bytes.Buffer) (Int, error) {
 
 InterpretingInitial:
 	for {
-		switch string(firstByte) {
-		case "-":
+		switch firstByte {
+		case '-':
 			if !isNegative {
 				isNegative = true
 				firstByte, err = buffer.ReadByte()
@@ -111,7 +112,7 @@ InterpretingInitial:
 			} else {
 				return -1, errors.New("Unexpected \"--\" in integer value.")
 			}
-		case "0":
+		case '0':
 			// Leading zero is only allowed for value "i0e".
 			if isNegative {
 				return -1, errors.New("Unexpected \"-0\" in integer value.")
@@ -138,10 +139,10 @@ AccumulatingDigits:
 		if err != nil {
 			return -1, err
 		}
-		switch string(nextByte) {
-		case "e":
+		switch nextByte {
+		case 'e':
 			break AccumulatingDigits
-		case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			digits = append(digits, nextByte)
 		default:
 			return -1, errors.New(fmt.Sprintf(
@@ -156,7 +157,7 @@ AccumulatingDigits:
 	}
 
 	if digitValue <= 0 {
-		panic("digitValue should not be able to be <= here.")
+		panic("digitValue should not be able to be <= 0 here.")
 	}
 
 	if !isNegative {
@@ -173,7 +174,68 @@ func (bstr String) WriteBencodedTo(writer io.Writer) error {
 }
 
 func decodeNextStringFrom(buffer *bytes.Buffer) (String, error) {
-	return "", errors.New("NOT IMPLEMENTED")
+	firstByte, err := buffer.ReadByte()
+	if err != nil {
+		return "", err
+	}
+
+	if firstByte == '0' {
+		// must be null string
+		lastByte, err := buffer.ReadByte()
+		switch {
+		case err != nil:
+			return "", err
+		case lastByte != ':':
+			return "", errors.New("Unexpected leading zero in non-{empty string}.")
+		default:
+			return "", nil
+		}
+	}
+
+	buffer.UnreadByte()
+
+	digits := []byte{}
+
+AccumulatingDigits:
+	for {
+		nextByte, err := buffer.ReadByte()
+		if err != nil {
+			return "", err
+		}
+		switch nextByte {
+		case ':':
+			break AccumulatingDigits
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			digits = append(digits, nextByte)
+		default:
+			return "", errors.New(fmt.Sprintf(
+				"Unexpected byte in integer value: %v",
+				strconv.Quote(string(nextByte))))
+		}
+	}
+
+	strLen, err := strconv.ParseInt(string(digits), 10, 64)
+
+	if err != nil {
+		return "", err
+	}
+
+	if strLen <= 0 {
+		panic("strLen should not be able to be <= 0 here.")
+	}
+
+	contents := make([]byte, strLen)
+
+	n, err := buffer.Read(contents)
+
+	if err != nil {
+		return "", err
+	}
+	if int64(n) != strLen {
+		return "", errors.New("Declared string length greater than remaining input.")
+	}
+
+	return String(contents), nil
 }
 
 func (blist List) WriteBencodedTo(writer io.Writer) error {
@@ -215,12 +277,12 @@ AccumulateItems:
 			break AccumulateItems
 		default:
 			buffer.UnreadByte()
-			nextValue, err := decodeNextFrom(buffer)
+			value, err := decodeNextFrom(buffer)
 			if err != nil {
 				return nil, err
 			}
 
-			result = append(result, nextValue)
+			result = append(result, value)
 		}
 	}
 
@@ -258,5 +320,32 @@ func decodeNextDictFrom(buffer *bytes.Buffer) (Dict, error) {
 		panic("How is this not a dictionary?")
 	}
 
-	return nil, errors.New("NOT IMPLEMENTED")
+	result := make(Dict, 0)
+
+AccumulateItems:
+	for {
+		nextByte, err := buffer.ReadByte()
+		switch {
+		case err != nil:
+			return nil, err
+		case nextByte == 'e':
+			break AccumulateItems
+		default:
+			buffer.UnreadByte()
+
+			key, err := decodeNextStringFrom(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			value, err := decodeNextFrom(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			result[key] = value
+		}
+	}
+
+	return result, nil
 }
