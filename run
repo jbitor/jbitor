@@ -2,26 +2,4 @@
 set -e
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
-cd "$GOPATH"
-
-echo "Formatting..."
-go fmt bitbucket.org/jeremybanks/go-distributed/bencoding
-go fmt bitbucket.org/jeremybanks/go-distributed/torrentutils
-go fmt bitbucket.org/jeremybanks/go-distributed/cli
-echo
-
-echo "Installing packages..."
-go install bitbucket.org/jeremybanks/go-distributed/bencoding
-go install bitbucket.org/jeremybanks/go-distributed/torrentutils
-go install bitbucket.org/jeremybanks/go-distributed/cli
-echo
-
-echo "Testing..."
-go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/bencoding
-go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentutils
-go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/cli
-echo
-
-echo "Running..."
-bin/cli torrent make . > tmp/test.torrent
-echo
+make run

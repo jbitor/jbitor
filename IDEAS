@@ -1,3 +1,11 @@
+    package torrentutils
+
+    func CheckCompletion(metainfo bencoding.Dict, path string) (float, err) {
+        
+    }
+
+---
+
 For now, we want to come up with the SIMPLEST POSSIBLE IMPLEMENTATION
 which can:
 
