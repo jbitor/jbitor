@@ -14,7 +14,7 @@ type Bencodable interface {
 
 type Int int64
 type String string
-type List []Bencodable // consider using pointers
+type List []Bencodable
 type Dict map[String]Bencodable
 
 func Encode(bval Bencodable) ([]byte, error) {

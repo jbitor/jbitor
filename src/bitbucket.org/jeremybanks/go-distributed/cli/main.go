@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
+	"bitbucket.org/jeremybanks/go-distributed/dht"
 	"bitbucket.org/jeremybanks/go-distributed/torrentutils"
 	"crypto/sha1"
 	"encoding/hex"
@@ -22,6 +23,8 @@ func main() {
 	switch command {
 	case "torrent":
 		cmdTorrent(commandArgs)
+	case "dht":
+		cmdDht(commandArgs)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %v\n", command)
 		os.Exit(1)
@@ -93,4 +96,33 @@ func cmdTorrentMake(args []string) {
 	os.Stdout.Sync()
 
 	_ = infoHashHex
+}
+
+func cmdDht(args []string) {
+	if len(args) == 0 {
+		fmt.Fprintf(os.Stderr, "Usage: %v dht SUBCOMMAND\n", os.Args[0])
+		os.Exit(1)
+		return
+	}
+
+	subcommand := args[0]
+	subcommandArgs := args[1:]
+
+	switch subcommand {
+	case "helloworld":
+		cmdDhtHelloWorld(subcommandArgs)
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown dht subcommand: %v\n", subcommand)
+		os.Exit(1)
+	}
+}
+
+func cmdDhtHelloWorld(args []string) {
+	node, err := dht.NewLocalNode()
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Hello, I am %v.\n", node)
 }
