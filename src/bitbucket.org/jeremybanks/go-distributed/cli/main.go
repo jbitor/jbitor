@@ -131,19 +131,19 @@ func cmdDhtHelloWorld(args []string) {
 	terminated := make(chan error)
 	go node.Run(terminated)
 
-	transmission := dht.RemoteNodeFromAddress(net.UDPAddr{
+	knownNode := dht.RemoteNodeFromAddress(net.UDPAddr{
 		//		IP:   net.IPv4(67, 215, 242, 138),
 		IP:   net.IPv4(127, 0, 0, 1),
 		Port: 6881,
 	})
 
-	node.Nodes = append(node.Nodes, transmission)
+	node.Nodes = append(node.Nodes, knownNode)
 
 	fmt.Printf("Hello, I am %v.\n", node)
 	fmt.Printf("I know of %v.\n", node.Nodes)
 
 	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
-	pingResult, pingErr := node.Ping(transmission)
+	pingResult, pingErr := node.Ping(knownNode)
 
 	fmt.Printf("Ping initiated\n")
 
@@ -156,11 +156,16 @@ func cmdDhtHelloWorld(args []string) {
 		fmt.Printf("got ping error: %v\n", result)
 	}
 
-	terminationErr := <-terminated
+	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
+	findResult, findErr := node.FindNode(knownNode, dht.NodeId(nodeId))
 
-	if terminationErr == nil {
-		fmt.Printf("LocalPeer terminated gracefully.\n")
-	} else {
-		fmt.Printf("LocalPeer terminated due to an error: %v.\n", terminationErr)
+	select {
+	case result := <-findResult:
+		fmt.Printf("got find result: %v\n", result)
+
+		fmt.Printf("I know of %v.\n", node.Nodes)
+	case result := <-findErr:
+		fmt.Printf("got find error: %v\n", result)
 	}
+
 }
