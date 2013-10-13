@@ -20,15 +20,11 @@ func (local *LocalNode) query(remote *RemoteNode, queryType string, arguments be
 	query.Err = make(chan error)
 	query.Remote = remote
 
-	go local.runQuery(remote, queryType, arguments, query)
-
-	return query
-}
-
-func (local *LocalNode) runQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict, query *Query) {
 	if arguments == nil {
 		arguments = bencoding.Dict{}
 	}
+
+	arguments["id"] = bencoding.String(local.Id)
 
 	// XXX: assert that these keys are not already present?
 	message := bencoding.Dict{
@@ -37,12 +33,8 @@ func (local *LocalNode) runQuery(remote *RemoteNode, queryType string, arguments
 		"a": arguments,
 	}
 
-	message["a"].(bencoding.Dict)["id"] = bencoding.String(local.Id)
-
 	transactionId := new([4]byte)
-	_, err := rand.Read(transactionId[:])
-
-	if err != nil {
+	if _, err := rand.Read(transactionId[:]); err != nil {
 		query.Err <- err
 		return
 	}
@@ -61,7 +53,10 @@ func (local *LocalNode) runQuery(remote *RemoteNode, queryType string, arguments
 	}
 
 	remote.LastRequestTo = time.Now()
+
 	local.Connection.WriteTo(encodedMessage, &remote.Address)
+
+	return query
 }
 
 func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
