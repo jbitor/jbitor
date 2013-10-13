@@ -22,7 +22,7 @@ run: PHONY
 	#
 	### Running...
 	#
-	bin/cli torrent make . > tmp/test.torrent
+	bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
 	#
 	bin/cli dht helloworld
 	#

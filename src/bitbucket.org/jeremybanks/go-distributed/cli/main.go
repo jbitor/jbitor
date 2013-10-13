@@ -58,9 +58,11 @@ func cmdTorrentMake(args []string) {
 		return
 	}
 
+	path := args[0]
+
 	infoDict, err := torrentutils.GenerateTorrentMetaInfo(torrentutils.CreationOptions{
-		Path:           args[0],
-		PieceLength:    524288,
+		Path:           path,
+		PieceLength:    32768,
 		ForceMultiFile: false,
 	})
 	if err != nil {
@@ -73,8 +75,13 @@ func cmdTorrentMake(args []string) {
 	}
 
 	torrentDict := bencoding.Dict{
-		"info":     infoDict,
-		"announce": bencoding.String("http://localhost/"),
+		"info": infoDict,
+		"nodes": bencoding.List{
+			bencoding.List{
+				bencoding.String("127.0.0.1"),
+				bencoding.Int(6881),
+			},
+		},
 	}
 
 	torrentData, err := bencoding.Encode(torrentDict)
@@ -136,16 +143,16 @@ func cmdDhtHelloWorld(args []string) {
 	fmt.Printf("I know of %v.\n", node.Nodes)
 
 	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
-	ping := node.Ping(transmission)
+	pingResult, pingErr := node.Ping(transmission)
 
 	fmt.Printf("Ping initiated\n")
 
 	select {
-	case result := <-ping.Result:
+	case result := <-pingResult:
 		fmt.Printf("got ping result: %v\n", *result)
 
 		fmt.Printf("I know of %v.\n", node.Nodes)
-	case result := <-ping.Err:
+	case result := <-pingErr:
 		fmt.Printf("got ping error: %v\n", result)
 	}
 

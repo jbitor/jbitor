@@ -87,15 +87,9 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 	local.Connection.WriteTo(encodedMessage, &remote.Address)
 }
 
-type PingResult struct {
-	Result chan *bencoding.Dict
-	Err    chan error
-}
-
-func (local *LocalNode) Ping(remote *RemoteNode) (result *PingResult) {
-	result = new(PingResult)
-	result.Result = make(chan *bencoding.Dict)
-	result.Err = make(chan error)
+func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
+	pingResult := make(chan *bencoding.Dict)
+	pingErr := make(chan error)
 
 	query := local.query(remote, bencoding.Dict{
 		"q": bencoding.String("ping"),
@@ -110,13 +104,13 @@ func (local *LocalNode) Ping(remote *RemoteNode) (result *PingResult) {
 		case value := <-query.Result:
 			remote.Id = NodeId((*value)["r"].(bencoding.Dict)["id"].(bencoding.String))
 
-			result.Result <- value
+			pingResult <- value
 		case err := <-query.Err:
-			result.Err <- err
+			pingErr <- err
 		}
 	}()
 
-	return result
+	return pingResult, pingErr
 }
 
 // Bencoding
