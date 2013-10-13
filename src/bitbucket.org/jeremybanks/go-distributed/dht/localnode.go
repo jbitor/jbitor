@@ -62,11 +62,31 @@ func LocalNodeFromBencodingDict(dict bencoding.Dict) (local *LocalNode) {
 func (local *LocalNode) MarshalBencodingDict() (dict bencoding.Dict) {
 	dict = bencoding.Dict{}
 
-	panic("marshaling of LocalNode not implemented")
+	if local.Id != UnknownNodeId {
+		dict["Id"] = bencoding.String(local.Id)
+	}
+
+	dict["Port"] = bencoding.Int(local.Port)
+
+	nodes := make(bencoding.List, len(local.Nodes))
+
+	i := 0
+	for _, node := range local.Nodes {
+		nodes[i] = node.MarshalBencodingDict()
+		i++
+	}
+
+	dict["Nodes"] = nodes
+
+	return dict
 }
 
 func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
-	return local.MarshalBencodingDict().WriteBencodedTo(writer)
+	dict := local.MarshalBencodingDict()
+
+	logger.Printf("Prepared for serialization: %v\n", dict)
+
+	return dict.WriteBencodedTo(writer)
 }
 
 // Running

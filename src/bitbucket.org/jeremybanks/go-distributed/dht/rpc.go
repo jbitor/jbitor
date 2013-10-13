@@ -3,7 +3,6 @@ package dht
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"crypto/rand"
-	"strconv"
 	"time"
 )
 
@@ -123,14 +122,12 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 	for {
 		n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
 
-		logger.Printf("Got UDP packet!\n")
+		_ = remoteAddr
 
 		if err != nil {
 			logger.Printf("Ignoring UDP read err: %v\n", err)
 			continue
 		}
-
-		logger.Printf("Got response?! %v from %v\n", strconv.Quote(string(response[:n])), remoteAddr)
 
 		result, err := bencoding.Decode(response[:n])
 
@@ -158,6 +155,8 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 			logger.Printf("Ignoring response with non-dict contents.\n")
 			continue
 		}
+
+		logger.Printf("Got query response. %v\n", resultD)
 
 		query.Result <- &resultBody
 	}

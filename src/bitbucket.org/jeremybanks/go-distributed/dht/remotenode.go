@@ -1,6 +1,7 @@
 package dht
 
 import (
+	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"fmt"
 	"net"
 	"time"
@@ -33,6 +34,39 @@ func GenerateFakeRemoteNode() (remote *RemoteNode) {
 	remote.Id = GenerateNodeId()
 	remote.Address = net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1234}
 	return remote
+}
+
+func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
+	panic("not implemented")
+}
+
+func (remote *RemoteNode) MarshalBencodingDict() (dict bencoding.Dict) {
+	dict = bencoding.Dict{
+		"id": bencoding.String(remote.Id),
+
+		// XXX: Ideally this would use proper compact representation, but for
+		// now maybe just use [[ address, port ]...]
+		"address": bencoding.List{
+			bencoding.String(remote.Address.IP.String()),
+			bencoding.Int(remote.Address.Port),
+		},
+
+		"lastRequestToSec":    bencoding.Int(remote.LastRequestTo.Unix()),
+		"lastResponseToSec":   bencoding.Int(remote.LastResponseTo.Unix()),
+		"lastRequestFromSec":  bencoding.Int(remote.LastRequestFrom.Unix()),
+		"lastResponseFromSec": bencoding.Int(remote.LastResponseFrom.Unix()),
+	}
+	/*
+
+		LastRequestTo    time.Time
+		LastResponseTo   time.Time
+		LastResponseFrom time.Time
+		LastRequestFrom  time.Time
+
+		ConsecutiveFailedQueries int
+	*/
+
+	return dict
 }
 
 func (remote *RemoteNode) String() string {

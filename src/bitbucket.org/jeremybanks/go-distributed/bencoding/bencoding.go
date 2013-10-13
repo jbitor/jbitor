@@ -363,3 +363,7 @@ AccumulateItems:
 
 	return result, nil
 }
+
+func (str String) String() string {
+	return strconv.Quote(string(str))
+}

@@ -155,7 +155,9 @@ func cmdDhtHelloWorld(args []string) {
 				return
 			}
 
-			err = ioutil.WriteFile(path, nodeData, 0)
+			logger.Printf("Saving LocalNode state to %v.\n", path)
+			// XXX: These flags give it 0 peermissions!
+			err = ioutil.WriteFile(path, nodeData, 0644)
 
 			if err != nil {
 				logger.Fatalf("Error writing local node state: %v\n", err)
