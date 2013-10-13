@@ -12,21 +12,43 @@ type LocalNode struct {
 	Id                 NodeId
 	Port               int
 	Connection         *net.UDPConn
-	Nodes              []*RemoteNode // TODO: proper spec-compliant routing-table
+	Nodes              map[string]*RemoteNode // is not a spec-compliant routing-table
 	OutstandingQueries map[string]*Query
 }
+
+// how do you de-duplicate/index nodes in a standard way?
 
 func NewLocalNode() (local *LocalNode) {
 	local = new(LocalNode)
 	local.Id = GenerateNodeId()
-	local.Nodes = []*RemoteNode{}
+	local.Nodes = map[string]*RemoteNode{}
 	local.Port = 1024 + weakrand.Intn(8192)
 	local.OutstandingQueries = make(map[string]*Query)
 	return local
 }
 
+func (local *LocalNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
+	// If a node with the same address is already in .Nodes, returns that node.
+	// Otherwise, add remote to .Nodes and return it.
+
+	key := remoteNodeKey(remote.Address)
+
+	if existingRemote, ok := local.Nodes[key]; ok {
+		remote = existingRemote
+	} else {
+		local.Nodes[key] = remote
+	}
+
+	return remote
+
+}
+
 func (local *LocalNode) String() string {
 	return fmt.Sprintf("<LocalNode %v on :%v>", local.Id, local.Port)
+}
+
+func remoteNodeKey(addr net.UDPAddr) string {
+	return fmt.Sprintf("%v:%v", addr.IP, addr.Port)
 }
 
 // Bencoding

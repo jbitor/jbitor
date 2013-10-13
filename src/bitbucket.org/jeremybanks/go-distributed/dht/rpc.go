@@ -97,7 +97,6 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 			result := []*RemoteNode{}
 
 			fmt.Println("Don't know how to handle:\n", *value)
-
 			findResult <- result
 		case err := <-query.Err:
 			findErr <- err
@@ -105,6 +104,10 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	}()
 
 	return findResult, findErr
+}
+
+func decodeNodes(local *LocalNode, nodes bencoding.List) []*RemoteNode {
+	panic("not implemented")
 }
 
 func (local *LocalNode) GetPeers(remote *RemoteNode, id NodeId) (<-chan *bencoding.Dict, <-chan error) {

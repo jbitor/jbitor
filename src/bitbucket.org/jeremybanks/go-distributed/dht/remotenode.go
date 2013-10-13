@@ -7,7 +7,7 @@ import (
 )
 
 type RemoteNode struct {
-	Id      NodeId
+	Id      NodeId // may be unknown
 	Address net.UDPAddr
 
 	LastRequestTo    time.Time
