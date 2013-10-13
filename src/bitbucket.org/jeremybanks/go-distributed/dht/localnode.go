@@ -2,6 +2,7 @@ package dht
 
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
@@ -35,6 +36,7 @@ func (local *LocalNode) String() string {
 
 type Query struct {
 	TransactionId string
+	Remote        *RemoteNode
 	Result        chan *bencoding.Dict
 	Err           chan error
 }
@@ -43,6 +45,7 @@ func (local *LocalNode) query(remote *RemoteNode, message bencoding.Dict) (query
 	query = new(Query)
 	query.Result = make(chan *bencoding.Dict)
 	query.Err = make(chan error)
+	query.Remote = remote
 
 	go local.runQuery(remote, message, query)
 
@@ -59,7 +62,15 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 		return
 	}
 
-	query.TransactionId = "he"
+	transactionId := new([4]byte)
+	_, err := rand.Read(transactionId[:])
+
+	if err != nil {
+		query.Err <- err
+		return
+	}
+
+	query.TransactionId = string(transactionId[:])
 
 	local.OutstandingQueries[query.TransactionId] = query
 
@@ -72,53 +83,40 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 		return
 	}
 
-	if err != nil {
-		query.Err <- err
-		return
-	}
-
-	fmt.Printf("Sending %v...\n", string(encodedMessage))
-
+	remote.LastRequestTo = time.Now()
 	local.Connection.WriteTo(encodedMessage, &remote.Address)
-
-	fmt.Printf("Sent. Listening...\n")
-
-	response := new([1024]byte) // XXX: This can't be right.
-	n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
-
-	if err != nil {
-		query.Err <- err
-		return
-	}
-
-	fmt.Printf("Got response?! %v from %v\n", string(response[:n]), remoteAddr)
-
-	result, err := bencoding.Decode(response[:n])
-
-	if err != nil {
-		query.Err <- err
-		return
-	}
-
-	resultD, ok := result.(bencoding.Dict)
-
-	if !ok {
-		query.Err <- errors.New("bencoded result was not a dict")
-		return
-	}
-
-	query.Result <- &resultD
-
 }
 
-func (local *LocalNode) Ping(remote *RemoteNode) (query *Query) {
-	return local.query(remote, bencoding.Dict{
+type PingResult struct {
+	Result chan *bencoding.Dict
+	Err    chan error
+}
+
+func (local *LocalNode) Ping(remote *RemoteNode) (result *PingResult) {
+	result = new(PingResult)
+	result.Result = make(chan *bencoding.Dict)
+	result.Err = make(chan error)
+
+	query := local.query(remote, bencoding.Dict{
 		"q": bencoding.String("ping"),
 		"a": bencoding.Dict{
 			"id": bencoding.String(local.Id),
 		},
 		"y": bencoding.String("q"),
 	})
+
+	go func() {
+		select {
+		case value := <-query.Result:
+			remote.Id = NodeId((*value)["r"].(bencoding.Dict)["id"].(bencoding.String))
+
+			result.Result <- value
+		case err := <-query.Err:
+			result.Err <- err
+		}
+	}()
+
+	return result
 }
 
 // Bencoding
@@ -142,7 +140,9 @@ func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
 // Running
 
 func (local *LocalNode) Run(terminated chan<- error) {
-	// Main loop for LocalPeer's activity
+	// Main loop for LocalPeer's activity.
+	// (Listening to replies and requests.)
+
 	conn, err := net.ListenUDP("udp4", &net.UDPAddr{
 		IP:   net.IPv4(0, 0, 0, 0),
 		Port: local.Port,
@@ -156,7 +156,40 @@ func (local *LocalNode) Run(terminated chan<- error) {
 
 	local.Connection = conn
 
-	time.Sleep(5000)
+	response := new([1024]byte)
+
+	for {
+		n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
+
+		if err != nil {
+			fmt.Printf("Ignoring UDP read err: %v\n", err)
+			continue
+		}
+
+		fmt.Printf("Got response?! %v from %v\n", string(response[:n]), remoteAddr)
+
+		result, err := bencoding.Decode(response[:n])
+
+		if err != nil {
+			fmt.Printf("Ignoring un-bedecodable message: %v\n", err)
+			continue
+		}
+
+		resultD, ok := result.(bencoding.Dict)
+
+		if !ok {
+			fmt.Printf("Ignoring bedecoded non-dict message: %v\n", err)
+			return
+		}
+
+		transactionId := string(resultD["t"].(bencoding.String))
+
+		query := local.OutstandingQueries[transactionId]
+
+		query.Remote.LastResponseFrom = time.Now()
+
+		query.Result <- &resultD
+	}
 
 	terminated <- errors.New("Not implemented")
 	return
