@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 )
 
@@ -295,7 +296,20 @@ func (bdict Dict) WriteBencodedTo(writer io.Writer) error {
 		return err
 	}
 
-	for key, value := range bdict {
+	strKeys := make([]string, len(bdict))
+
+	i := 0
+	for strKey, _ := range bdict {
+		strKeys[i] = string(strKey)
+		i += 1
+	}
+
+	sort.Strings(strKeys)
+
+	for _, strKey := range strKeys {
+		key := String(strKey)
+		value := bdict[key]
+
 		err = key.WriteBencodedTo(writer)
 		if err != nil {
 			return err

@@ -10,8 +10,6 @@ type RemoteNode struct {
 	Id      NodeId
 	Address net.UDPAddr
 
-	OutstandingQueries map[string]Query
-
 	LastRequestTo    time.Time
 	LastResponseTo   time.Time
 	LastResponseFrom time.Time

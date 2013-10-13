@@ -7,12 +7,15 @@ import (
 	"io"
 	weakrand "math/rand"
 	"net"
+	"time"
 )
 
 type LocalNode struct {
-	Id    NodeId
-	Port  int
-	Nodes []*RemoteNode // TODO: proper spec-compliant routing-table
+	Id                 NodeId
+	Port               int
+	Connection         *net.UDPConn
+	Nodes              []*RemoteNode // TODO: proper spec-compliant routing-table
+	OutstandingQueries map[string]*Query
 }
 
 func NewLocalNode() (local *LocalNode) {
@@ -20,6 +23,7 @@ func NewLocalNode() (local *LocalNode) {
 	local.Id = GenerateNodeId()
 	local.Nodes = []*RemoteNode{}
 	local.Port = 1024 + weakrand.Intn(8192)
+	local.OutstandingQueries = make(map[string]*Query)
 	return local
 }
 
@@ -55,7 +59,10 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 		return
 	}
 
-	query.TransactionId = "hello"
+	query.TransactionId = "he"
+
+	local.OutstandingQueries[query.TransactionId] = query
+
 	message["t"] = bencoding.String(query.TransactionId)
 
 	encodedMessage, err := bencoding.Encode(message)
@@ -65,31 +72,28 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 		return
 	}
 
-	conn, err := net.DialUDP("udp4", &net.UDPAddr{
-		IP:   net.IPv4(0, 0, 0, 0),
-		Port: local.Port,
-	}, &remote.Address)
-
 	if err != nil {
 		query.Err <- err
 		return
 	}
 
-	conn.Write(encodedMessage)
+	fmt.Printf("Sending %v...\n", string(encodedMessage))
+
+	local.Connection.WriteTo(encodedMessage, &remote.Address)
+
+	fmt.Printf("Sent. Listening...\n")
 
 	response := new([1024]byte) // XXX: This can't be right.
-	_, err = conn.Read(response[:])
+	n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
 
 	if err != nil {
 		query.Err <- err
 		return
 	}
 
-	fmt.Printf("Got response?! %v\n", response[:])
+	fmt.Printf("Got response?! %v from %v\n", string(response[:n]), remoteAddr)
 
-	conn.Close() // hmmm...
-
-	result, err := bencoding.Decode(response[:])
+	result, err := bencoding.Decode(response[:n])
 
 	if err != nil {
 		query.Err <- err
@@ -109,8 +113,11 @@ func (local *LocalNode) runQuery(remote *RemoteNode, message bencoding.Dict, que
 
 func (local *LocalNode) Ping(remote *RemoteNode) (query *Query) {
 	return local.query(remote, bencoding.Dict{
-		"y":  bencoding.String("ping"),
-		"id": bencoding.String(local.Id),
+		"q": bencoding.String("ping"),
+		"a": bencoding.Dict{
+			"id": bencoding.String(local.Id),
+		},
+		"y": bencoding.String("q"),
 	})
 }
 
@@ -136,6 +143,21 @@ func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
 
 func (local *LocalNode) Run(terminated chan<- error) {
 	// Main loop for LocalPeer's activity
+	conn, err := net.ListenUDP("udp4", &net.UDPAddr{
+		IP:   net.IPv4(0, 0, 0, 0),
+		Port: local.Port,
+	})
+	defer conn.Close()
+
+	if err != nil {
+		terminated <- err
+		return
+	}
+
+	local.Connection = conn
+
+	time.Sleep(5000)
 
 	terminated <- errors.New("Not implemented")
+	return
 }

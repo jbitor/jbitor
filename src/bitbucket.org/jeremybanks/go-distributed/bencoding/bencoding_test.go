@@ -12,11 +12,19 @@ func Test(t *testing.T) {
 		"i0e":    Int(0),
 		"i1e":    Int(1),
 		"i1023e": Int(1023),
-		"li1ei2ed2:abl1:ci4e1:de2:aai1eeledee": List{
+		"li1ei2ed2:aai1e2:abl1:ci4e1:deeledee": List{
 			Int(1), Int(2), Dict{
 				"ab": List{String("c"), Int(4), String("d")},
 				"aa": Int(1),
 			}, List{}, Dict{},
+		},
+		"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe": Dict{
+			"y": String("q"),
+			"a": Dict{
+				"id": String("abcdefghij0123456789"),
+			},
+			"t": String("aa"),
+			"q": String("ping"),
 		},
 	}
 

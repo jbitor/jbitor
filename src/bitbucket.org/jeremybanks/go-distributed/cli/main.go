@@ -125,7 +125,7 @@ func cmdDhtHelloWorld(args []string) {
 	go node.Run(terminated)
 
 	transmission := dht.RemoteNodeFromAddress(net.UDPAddr{
-		IP:   net.IPv4(127, 0, 0, 1),
+		IP:   net.IPv4(67, 215, 242, 138),
 		Port: 6881,
 	})
 
@@ -137,9 +137,11 @@ func cmdDhtHelloWorld(args []string) {
 	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
 	ping := node.Ping(transmission)
 
+	fmt.Printf("Ping initiated\n")
+
 	select {
 	case result := <-ping.Result:
-		fmt.Printf("got ping result: %v\n", result)
+		fmt.Printf("got ping result: %v\n", *result)
 	case result := <-ping.Err:
 		fmt.Printf("got ping error: %v\n", result)
 	}
