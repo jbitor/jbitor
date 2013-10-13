@@ -121,6 +121,9 @@ func cmdDht(args []string) {
 func cmdDhtHelloWorld(args []string) {
 	node := dht.NewLocalNode()
 
+	terminated := make(chan error)
+	go node.Run(terminated)
+
 	transmission := dht.RemoteNodeFromAddress(net.UDPAddr{
 		IP:   net.IPv4(127, 0, 0, 1),
 		Port: 6881,
@@ -132,7 +135,20 @@ func cmdDhtHelloWorld(args []string) {
 	fmt.Printf("I know of %v.\n", node.Nodes)
 
 	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
-	pingResult := node.Ping(transmission)
+	ping := node.Ping(transmission)
 
-	fmt.Printf("I don't know what to do with %v.\n", pingResult)
+	select {
+	case result := <-ping.Result:
+		fmt.Printf("got ping result: %v\n", result)
+	case result := <-ping.Err:
+		fmt.Printf("got ping error: %v\n", result)
+	}
+
+	terminationErr := <-terminated
+
+	if terminationErr == nil {
+		fmt.Printf("LocalPeer terminated gracefully.\n")
+	} else {
+		fmt.Printf("LocalPeer terminated due to an error: %v.\n", terminationErr)
+	}
 }
