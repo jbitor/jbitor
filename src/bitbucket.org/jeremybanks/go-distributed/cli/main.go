@@ -6,15 +6,14 @@ import (
 	"bitbucket.org/jeremybanks/go-distributed/torrentutils"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 )
 
 func main() {
 	if len(os.Args) == 1 {
-		logger.Printf("Usage: %v COMMAND\n", os.Args[0])
-		os.Exit(1)
+		logger.Fatalf("Usage: %v COMMAND\n", os.Args[0])
 		return
 	}
 
@@ -27,15 +26,14 @@ func main() {
 	case "dht":
 		cmdDht(commandArgs)
 	default:
-		logger.Printf("Unknown command: %v\n", command)
-		os.Exit(1)
+		logger.Fatalf("Unknown command: %v\n", command)
+		return
 	}
 }
 
 func cmdTorrent(args []string) {
 	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %v torrent SUBCOMMAND\n", os.Args[0])
-		os.Exit(1)
+		logger.Fatalf("Usage: %v torrent SUBCOMMAND\n", os.Args[0])
 		return
 	}
 
@@ -46,15 +44,14 @@ func cmdTorrent(args []string) {
 	case "make":
 		cmdTorrentMake(subcommandArgs)
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown torrent subcommand: %v\n", subcommand)
-		os.Exit(1)
+		logger.Fatalf("Unknown torrent subcommand: %v\n", subcommand)
+		return
 	}
 }
 
 func cmdTorrentMake(args []string) {
 	if len(args) != 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %v torrent make PATH\n", os.Args[0])
-		os.Exit(1)
+		logger.Fatalf("Usage: %v torrent make PATH\n", os.Args[0])
 		return
 	}
 
@@ -87,8 +84,7 @@ func cmdTorrentMake(args []string) {
 	torrentData, err := bencoding.Encode(torrentDict)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error encoding torrent data:", err)
-		os.Exit(1)
+		logger.Fatalf("Error encoding torrent data:", err)
 		return
 	}
 
@@ -98,7 +94,6 @@ func cmdTorrentMake(args []string) {
 	infoHashHex := hex.EncodeToString(hash)
 
 	logger.Printf("Generated torrent btih=%v.\n", infoHashHex)
-	os.Stderr.Sync()
 
 	os.Stdout.Write(torrentData)
 	os.Stdout.Sync()
@@ -108,8 +103,7 @@ func cmdTorrentMake(args []string) {
 
 func cmdDht(args []string) {
 	if len(args) == 0 {
-		logger.Printf("Usage: %v dht SUBCOMMAND\n", os.Args[0])
-		os.Exit(1)
+		logger.Fatalf("Usage: %v dht SUBCOMMAND\n", os.Args[0])
 		return
 	}
 
@@ -120,13 +114,57 @@ func cmdDht(args []string) {
 	case "helloworld":
 		cmdDhtHelloWorld(subcommandArgs)
 	default:
-		logger.Printf("Unknown dht subcommand: %v\n", subcommand)
-		os.Exit(1)
+		logger.Fatalf("Unknown dht subcommand: %v\n", subcommand)
+		return
 	}
 }
 
 func cmdDhtHelloWorld(args []string) {
-	node := dht.NewLocalNode()
+	var node *dht.LocalNode
+
+	if len(args) > 0 {
+		path := args[0]
+
+		// XXX: We shold open and lock the file, so that instances can't clobber.
+		nodeData, err := ioutil.ReadFile(path)
+		if err != nil {
+			logger.Printf("Unable to read existing DHT node (%v). Creating a new one.\n", err)
+			node = dht.NewLocalNode()
+		} else {
+			nodeDict, err := bencoding.Decode(nodeData)
+			if err != nil {
+				logger.Fatalf("%v\n", err)
+				return
+			}
+
+			nodeDictAsDict, ok := nodeDict.(bencoding.Dict)
+			if !ok {
+				logger.Fatalf("\n")
+				return
+			}
+
+			node = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
+		}
+
+		defer func() {
+			// save node
+			nodeData, err := bencoding.Encode(node)
+
+			if err != nil {
+				logger.Fatalf("Error encoding local node state: %v\n", err)
+				return
+			}
+
+			err = ioutil.WriteFile(path, nodeData, 0)
+
+			if err != nil {
+				logger.Fatalf("Error writing local node state: %v\n", err)
+				return
+			}
+		}()
+	} else {
+		node = dht.NewLocalNode()
+	}
 
 	terminated := make(chan error)
 	go node.Run(terminated)

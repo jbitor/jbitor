@@ -1,7 +1,7 @@
 run: bin/cli PHONY
 	@bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
 	@echo
-	@bin/cli dht helloworld
+	@bin/cli dht helloworld tmp/dht-node.benc
 
 bin/cli:
 	### Formatting...
