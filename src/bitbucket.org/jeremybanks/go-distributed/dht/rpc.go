@@ -3,7 +3,6 @@ package dht
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"crypto/rand"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -96,7 +95,7 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 		case value := <-query.Result:
 			result := []*RemoteNode{}
 
-			fmt.Println("Don't know how to handle:\n", *value)
+			logger.Println("Don't know how to handle:\n", *value)
 			findResult <- result
 		case err := <-query.Err:
 			findErr <- err
@@ -124,26 +123,26 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 	for {
 		n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
 
-		fmt.Printf("Got UDP packet!\n")
+		logger.Printf("Got UDP packet!\n")
 
 		if err != nil {
-			fmt.Printf("Ignoring UDP read err: %v\n", err)
+			logger.Printf("Ignoring UDP read err: %v\n", err)
 			continue
 		}
 
-		fmt.Printf("Got response?! %v from %v\n", strconv.Quote(string(response[:n])), remoteAddr)
+		logger.Printf("Got response?! %v from %v\n", strconv.Quote(string(response[:n])), remoteAddr)
 
 		result, err := bencoding.Decode(response[:n])
 
 		if err != nil {
-			fmt.Printf("Ignoring un-bedecodable message: %v\n", err)
+			logger.Printf("Ignoring un-bedecodable message: %v\n", err)
 			continue
 		}
 
 		resultD, ok := result.(bencoding.Dict)
 
 		if !ok {
-			fmt.Printf("Ignoring bedecoded non-dict message: %v\n", err)
+			logger.Printf("Ignoring bedecoded non-dict message: %v\n", err)
 			continue
 		}
 
@@ -156,7 +155,7 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 		resultBody, ok := resultD["r"].(bencoding.Dict)
 
 		if !ok {
-			fmt.Printf("Ignoring response with non-dict contents.\n")
+			logger.Printf("Ignoring response with non-dict contents.\n")
 			continue
 		}
 

@@ -13,7 +13,7 @@ import (
 
 func main() {
 	if len(os.Args) == 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %v COMMAND\n", os.Args[0])
+		logger.Printf("Usage: %v COMMAND\n", os.Args[0])
 		os.Exit(1)
 		return
 	}
@@ -27,7 +27,7 @@ func main() {
 	case "dht":
 		cmdDht(commandArgs)
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %v\n", command)
+		logger.Printf("Unknown command: %v\n", command)
 		os.Exit(1)
 	}
 }
@@ -97,7 +97,7 @@ func cmdTorrentMake(args []string) {
 	hash := hasher.Sum(nil)
 	infoHashHex := hex.EncodeToString(hash)
 
-	fmt.Fprintf(os.Stderr, "Generated torrent btih=%v.\n", infoHashHex)
+	logger.Printf("Generated torrent btih=%v.\n", infoHashHex)
 	os.Stderr.Sync()
 
 	os.Stdout.Write(torrentData)
@@ -108,7 +108,7 @@ func cmdTorrentMake(args []string) {
 
 func cmdDht(args []string) {
 	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %v dht SUBCOMMAND\n", os.Args[0])
+		logger.Printf("Usage: %v dht SUBCOMMAND\n", os.Args[0])
 		os.Exit(1)
 		return
 	}
@@ -120,7 +120,7 @@ func cmdDht(args []string) {
 	case "helloworld":
 		cmdDhtHelloWorld(subcommandArgs)
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown dht subcommand: %v\n", subcommand)
+		logger.Printf("Unknown dht subcommand: %v\n", subcommand)
 		os.Exit(1)
 	}
 }
@@ -138,31 +138,30 @@ func cmdDhtHelloWorld(args []string) {
 
 	knownNode = node.AddOrGetRemoteNode(knownNode)
 
-	fmt.Printf("Hello, I am %v.\n", node)
-	fmt.Printf("I know of %v.\n", node.Nodes)
+	logger.Printf("Hello, I am %v.\n", node)
+	logger.Printf("I know of %v.\n", node.Nodes)
 
-	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
+	logger.Printf("I am attempting to ping a DHT node at localhost:6881.\n")
 	pingResult, pingErr := node.Ping(knownNode)
 
-	fmt.Printf("Ping initiated\n")
-
-	select {
-	case result := <-pingResult:
-		fmt.Printf("got ping result: %v\n", *result)
-	case result := <-pingErr:
-		fmt.Printf("got ping error: %v\n", result)
-	}
-
-	fmt.Printf("I know of %v.\n", node.Nodes)
+	logger.Printf("Ping initiated\n")
 
 	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
 	findResult, findErr := node.FindNode(knownNode, dht.NodeId(nodeId))
 
-	select {
-	case result := <-findResult:
-		fmt.Printf("got find result: %v\n", result)
-	case result := <-findErr:
-		fmt.Printf("got find error: %v\n", result)
+	for i := 0; i < 2; i++ {
+		select {
+		case result := <-pingResult:
+			logger.Printf("got ping result: %v\n", *result)
+		case result := <-pingErr:
+			logger.Printf("got ping error: %v\n", result)
+		case result := <-findResult:
+			logger.Printf("got find result: %v\n", result)
+		case result := <-findErr:
+			logger.Printf("got find error: %v\n", result)
+		}
 	}
+
+	logger.Printf("I know of %v.\n", node.Nodes)
 
 }

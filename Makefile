@@ -1,4 +1,9 @@
-run: PHONY
+run: bin/cli PHONY
+	@bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
+	@echo
+	@bin/cli dht helloworld
+
+bin/cli:
 	### Formatting...
 	#
 	go fmt bitbucket.org/jeremybanks/go-distributed/bencoding
@@ -19,12 +24,6 @@ run: PHONY
 	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/dht
 	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentutils
 	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/cli
-	#
-	### Running...
-	#
-	bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
-	#
-	bin/cli dht helloworld
 	#
 
 PHONY:
