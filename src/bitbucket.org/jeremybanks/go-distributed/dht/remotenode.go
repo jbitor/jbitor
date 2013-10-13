@@ -29,42 +29,41 @@ func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 	return remote
 }
 
-func GenerateFakeRemoteNode() (remote *RemoteNode) {
-	remote = new(RemoteNode)
-	remote.Id = GenerateNodeId()
-	remote.Address = net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1234}
-	return remote
-}
-
 func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
-	panic("not implemented")
+	remote = new(RemoteNode)
+
+	remote.Id = NodeId(dict["Id"].(bencoding.String))
+	remote.Address = net.UDPAddr{
+		IP:   net.ParseIP(string(dict["Address"].(bencoding.List)[0].(bencoding.String))),
+		Port: int(dict["Address"].(bencoding.List)[1].(bencoding.Int)),
+	}
+	remote.LastRequestTo = time.Unix(int64(dict["LastRequestToSec"].(bencoding.Int)), 0)
+	remote.LastResponseTo = time.Unix(int64(dict["LastResponseToSec"].(bencoding.Int)), 0)
+	remote.LastRequestFrom = time.Unix(int64(dict["LastRequestFromSec"].(bencoding.Int)), 0)
+	remote.LastResponseFrom = time.Unix(int64(dict["LastResponseFromSec"].(bencoding.Int)), 0)
+	remote.ConsecutiveFailedQueries = int(dict["ConsecutiveFailedQueries"].(bencoding.Int))
+
+	return remote
 }
 
 func (remote *RemoteNode) MarshalBencodingDict() (dict bencoding.Dict) {
 	dict = bencoding.Dict{
-		"id": bencoding.String(remote.Id),
+		"Id": bencoding.String(remote.Id),
 
 		// XXX: Ideally this would use proper compact representation, but for
 		// now maybe just use [[ address, port ]...]
-		"address": bencoding.List{
+		"Address": bencoding.List{
 			bencoding.String(remote.Address.IP.String()),
 			bencoding.Int(remote.Address.Port),
 		},
 
-		"lastRequestToSec":    bencoding.Int(remote.LastRequestTo.Unix()),
-		"lastResponseToSec":   bencoding.Int(remote.LastResponseTo.Unix()),
-		"lastRequestFromSec":  bencoding.Int(remote.LastRequestFrom.Unix()),
-		"lastResponseFromSec": bencoding.Int(remote.LastResponseFrom.Unix()),
+		"LastRequestToSec":    bencoding.Int(remote.LastRequestTo.Unix()),
+		"LastResponseToSec":   bencoding.Int(remote.LastResponseTo.Unix()),
+		"LastRequestFromSec":  bencoding.Int(remote.LastRequestFrom.Unix()),
+		"LastResponseFromSec": bencoding.Int(remote.LastResponseFrom.Unix()),
+
+		"ConsecutiveFailedQueries": bencoding.Int(remote.ConsecutiveFailedQueries),
 	}
-	/*
-
-		LastRequestTo    time.Time
-		LastResponseTo   time.Time
-		LastResponseFrom time.Time
-		LastRequestFrom  time.Time
-
-		ConsecutiveFailedQueries int
-	*/
 
 	return dict
 }

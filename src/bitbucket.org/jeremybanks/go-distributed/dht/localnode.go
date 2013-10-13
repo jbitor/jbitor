@@ -21,9 +21,9 @@ type LocalNode struct {
 func NewLocalNode() (local *LocalNode) {
 	local = new(LocalNode)
 	local.Id = GenerateNodeId()
-	local.Nodes = map[string]*RemoteNode{}
 	local.Port = 1024 + weakrand.Intn(8192)
 	local.OutstandingQueries = make(map[string]*Query)
+	local.Nodes = map[string]*RemoteNode{}
 	return local
 }
 
@@ -56,7 +56,17 @@ func remoteNodeKey(addr net.UDPAddr) string {
 func LocalNodeFromBencodingDict(dict bencoding.Dict) (local *LocalNode) {
 	local = new(LocalNode)
 
-	panic("unmarshaling of LocalNode not implemented")
+	local.Id = NodeId(dict["Id"].(bencoding.String))
+	local.Port = int(dict["Port"].(bencoding.Int))
+	local.OutstandingQueries = make(map[string]*Query)
+	local.Nodes = map[string]*RemoteNode{}
+
+	for _, nodeDict := range dict["Nodes"].(bencoding.List) {
+		remote := RemoteNodeFromBencodingDict(nodeDict.(bencoding.Dict))
+		local.AddOrGetRemoteNode(remote)
+	}
+
+	return local
 }
 
 func (local *LocalNode) MarshalBencodingDict() (dict bencoding.Dict) {
