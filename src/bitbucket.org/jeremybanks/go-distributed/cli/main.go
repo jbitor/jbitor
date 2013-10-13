@@ -150,11 +150,11 @@ func cmdDhtHelloWorld(args []string) {
 	select {
 	case result := <-pingResult:
 		fmt.Printf("got ping result: %v\n", *result)
-
-		fmt.Printf("I know of %v.\n", node.Nodes)
 	case result := <-pingErr:
 		fmt.Printf("got ping error: %v\n", result)
 	}
+
+	fmt.Printf("I know of %v.\n", node.Nodes)
 
 	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
 	findResult, findErr := node.FindNode(knownNode, dht.NodeId(nodeId))
@@ -162,8 +162,6 @@ func cmdDhtHelloWorld(args []string) {
 	select {
 	case result := <-findResult:
 		fmt.Printf("got find result: %v\n", result)
-
-		fmt.Printf("I know of %v.\n", node.Nodes)
 	case result := <-findErr:
 		fmt.Printf("got find error: %v\n", result)
 	}

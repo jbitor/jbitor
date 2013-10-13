@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"crypto/rand"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -55,7 +56,8 @@ func (local *LocalNode) query(remote *RemoteNode, queryType string, arguments be
 	remote.LastRequestTo = time.Now()
 
 	go func() {
-		// XXX: Does this wait longer than necessary to send the packet?
+		// XXX:
+		// Does this wait longer than necessary to send the packet?
 		local.Connection.WriteTo(encodedMessage, &remote.Address)
 	}()
 
@@ -94,7 +96,7 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 		case value := <-query.Result:
 			result := []*RemoteNode{}
 
-			fmt.Println("Don't know how to handle:", *value)
+			fmt.Println("Don't know how to handle:\n", *value)
 
 			findResult <- result
 		case err := <-query.Err:
@@ -126,7 +128,7 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 			continue
 		}
 
-		fmt.Printf("Got response?! %v from %v\n", string(response[:n]), remoteAddr)
+		fmt.Printf("Got response?! %v from %v\n", strconv.Quote(string(response[:n])), remoteAddr)
 
 		result, err := bencoding.Decode(response[:n])
 
