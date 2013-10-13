@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"os"
 )
 
@@ -118,11 +119,20 @@ func cmdDht(args []string) {
 }
 
 func cmdDhtHelloWorld(args []string) {
-	node, err := dht.NewLocalNode()
+	node := dht.NewLocalNode()
 
-	if err != nil {
-		panic(err)
-	}
+	transmission := dht.RemoteNodeFromAddress(net.UDPAddr{
+		IP:   net.IPv4(127, 0, 0, 1),
+		Port: 6881,
+	})
+
+	node.Nodes = append(node.Nodes, transmission)
 
 	fmt.Printf("Hello, I am %v.\n", node)
+	fmt.Printf("I know of %v.\n", node.Nodes)
+
+	fmt.Printf("\nI am attempting to ping a DHT node at localhost:6881.\n")
+	pingResult := node.Ping(transmission)
+
+	fmt.Printf("I don't know what to do with %v.\n", pingResult)
 }
