@@ -54,7 +54,10 @@ func (local *LocalNode) query(remote *RemoteNode, queryType string, arguments be
 
 	remote.LastRequestTo = time.Now()
 
-	local.Connection.WriteTo(encodedMessage, &remote.Address)
+	go func() {
+		// XXX: Does this wait longer than necessary to send the packet?
+		local.Connection.WriteTo(encodedMessage, &remote.Address)
+	}()
 
 	return query
 }
