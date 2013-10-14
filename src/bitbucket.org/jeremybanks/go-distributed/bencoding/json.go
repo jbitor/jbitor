@@ -120,14 +120,14 @@ func FromJsonable(jval interface{}) (Bencodable, error) {
 		return bval, nil
 
 	case string:
-		pieces := make([]byte, utf8.RuneCount([]byte(jval)))
+		pieces := make([]byte, 0)
 
-		for i, runeVal := range jval {
-			if runeVal > 255 {
+		for _, runeVal := range jval {
+			if runeVal > 0xFF {
 				return nil, errors.New("Error: character with codepoint > 0xFF")
 			}
 
-			pieces[i] = byte(runeVal)
+			pieces = append(pieces, byte(runeVal))
 		}
 
 		return String(pieces), nil

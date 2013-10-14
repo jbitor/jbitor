@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 				"aa": Int(1),
 			}, List{}, Dict{},
 		},
-		"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe": Dict{
+		"d1:ad2:id21:abcdefghij0123456789\xFFe1:q4:ping1:t2:aa1:y1:qe": Dict{
 			"y": String("q"),
 			"a": Dict{
 				"id": String("abcdefghij0123456789\xFF"),
