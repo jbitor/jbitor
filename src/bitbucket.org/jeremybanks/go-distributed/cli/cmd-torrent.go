@@ -40,12 +40,14 @@ func cmdTorrentMake(args []string) {
 		ForceMultiFile: false,
 	})
 	if err != nil {
-		panic(err)
+		logger.Fatalf("Error generating torrent: %v\n", err)
+		return
 	}
 
 	infoData, err := bencoding.Encode(infoDict)
 	if err != nil {
-		panic(err)
+		logger.Fatalf("Error encoding torrent infodict (for hashing): %v\n", err)
+		return
 	}
 
 	torrentDict := bencoding.Dict{
@@ -61,7 +63,7 @@ func cmdTorrentMake(args []string) {
 	torrentData, err := bencoding.Encode(torrentDict)
 
 	if err != nil {
-		logger.Fatalf("Error encoding torrent data:", err)
+		logger.Fatalf("Error encoding torrent data: %v\n", err)
 		return
 	}
 

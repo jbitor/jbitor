@@ -54,7 +54,7 @@ func cmdDhtHelloWorld(args []string) {
 
 				nodeDictAsDict, ok := nodeDict.(bencoding.Dict)
 				if !ok {
-					logger.Fatalf("\n")
+					logger.Fatalf("Node data wasn't a dict?\n")
 					return
 				}
 

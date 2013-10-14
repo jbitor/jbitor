@@ -98,9 +98,5 @@ func GenerateTorrentMetaInfo(options CreationOptions) (TorrentMeta, error) {
 		infoDict["length"] = bencoding.Int(fileInfo.Size())
 	}
 
-	if err != nil {
-		panic(err)
-	}
-
 	return infoDict, nil
 }

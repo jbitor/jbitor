@@ -104,16 +104,19 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	return findResult, findErr
 }
 
-func decodeNodes(local *LocalNode, nodes bencoding.List) []*RemoteNode {
-	panic("not implemented")
+func decodeNodes(local *LocalNode, nodes bencoding.List) (remote []*RemoteNode) {
+	logger.Fatalf("decodeNode() not implemented\n")
+	return
 }
 
-func (local *LocalNode) GetPeers(remote *RemoteNode, id NodeId) (<-chan *bencoding.Dict, <-chan error) {
-	panic("not implemented")
+func (local *LocalNode) GetPeers(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+	logger.Fatalf("GetPeers() not implemented\n")
+	return
 }
 
-func (local *LocalNode) AnnouncePeer(remote *RemoteNode, id NodeId) (<-chan *bencoding.Dict, <-chan error) {
-	panic("not implemented")
+func (local *LocalNode) AnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+	logger.Fatalf("AnnouncePeer() not implemented\n")
+	return
 }
 
 func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
