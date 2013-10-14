@@ -67,6 +67,31 @@ func cmdJsonToBencoding(args []string) {
 		return
 	}
 
-	logger.Fatalf("json to-bencoding not implemented")
-	return
+	data, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		logger.Fatalf("Error reading stdin: %v\n", err)
+		return
+	}
+
+	var decoded *interface{}
+	err = json.Unmarshal(data, &decoded)
+	if err != nil {
+		logger.Fatalf("Error decoding JSON from stdin: %v\n", err)
+		return
+	}
+
+	bval, err := bencoding.FromJsonable(*decoded)
+	if err != nil {
+		logger.Fatalf("Error converting jsonable to bencodable: %v\n", err)
+		return
+	}
+
+	encoded, err := bencoding.Encode(bval)
+	if err != nil {
+		logger.Fatalf("Error bencoding value: %v\n", err)
+		return
+	}
+
+	os.Stdout.Write(encoded)
+	os.Stdout.Sync()
 }

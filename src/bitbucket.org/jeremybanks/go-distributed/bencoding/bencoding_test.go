@@ -1,6 +1,7 @@
 package bencoding
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"testing"
@@ -21,7 +22,7 @@ func Test(t *testing.T) {
 		"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe": Dict{
 			"y": String("q"),
 			"a": Dict{
-				"id": String("abcdefghij0123456789"),
+				"id": String("abcdefghij0123456789\xFF"),
 			},
 			"t": String("aa"),
 			"q": String("ping"),
@@ -52,5 +53,33 @@ func Test(t *testing.T) {
 					"does not equal expected value", originalDecoded)
 			}
 		}
+
+		jsonable, err := decoded.ToJsonable()
+		if err != nil {
+			t.Error("Error JSONablizing")
+		}
+
+		jsoned, err := json.Marshal(jsonable)
+		if err != nil {
+			t.Error("Error JSONing")
+		}
+
+		var unjsoned interface{}
+		err = json.Unmarshal(jsoned, &unjsoned)
+		if err != nil {
+			t.Error("Error unJSONing")
+		}
+
+		unjsonabled, err := FromJsonable(unjsoned)
+		if err != nil {
+			t.Error("Error unjsonabling")
+		}
+
+		if !reflect.DeepEqual(unjsonabled, decoded) {
+			t.Error(
+				"JSON round-tripped value", unjsonabled,
+				"does not equal expected value", decoded)
+		}
+
 	}
 }
