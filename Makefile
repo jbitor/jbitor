@@ -1,24 +1,24 @@
 bin/cli:
 	### Formatting...
 	#
-	go fmt bitbucket.org/jeremybanks/go-distributed/bencoding
-	go fmt bitbucket.org/jeremybanks/go-distributed/dht
-	go fmt bitbucket.org/jeremybanks/go-distributed/torrentutils
-	go fmt bitbucket.org/jeremybanks/go-distributed/cli
+	go fmt github.com/jeremybanks/go-distributed/bencoding
+	go fmt github.com/jeremybanks/go-distributed/dht
+	go fmt github.com/jeremybanks/go-distributed/torrentutils
+	go fmt github.com/jeremybanks/go-distributed/cli
 	#
 	### Installing packages...
 	#
-	go install bitbucket.org/jeremybanks/go-distributed/bencoding
-	go install bitbucket.org/jeremybanks/go-distributed/dht
-	go install bitbucket.org/jeremybanks/go-distributed/torrentutils
-	go install bitbucket.org/jeremybanks/go-distributed/cli
+	go install github.com/jeremybanks/go-distributed/bencoding
+	go install github.com/jeremybanks/go-distributed/dht
+	go install github.com/jeremybanks/go-distributed/torrentutils
+	go install github.com/jeremybanks/go-distributed/cli
 	#
 	### Testing...
 	#
-	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/bencoding
-	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/dht
-	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/torrentutils
-	go test -run=. -bench=NONE bitbucket.org/jeremybanks/go-distributed/cli
+	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/bencoding
+	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/dht
+	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/torrentutils
+	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/cli
 	#
 
 run: bin/cli PHONY

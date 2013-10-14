@@ -1,8 +1,8 @@
 package dht
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"crypto/rand"
+	"github.com/jeremybanks/go-distributed/bencoding"
 	"net"
 	"time"
 )

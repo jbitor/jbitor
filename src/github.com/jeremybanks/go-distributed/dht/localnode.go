@@ -1,8 +1,8 @@
 package dht
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"fmt"
+	"github.com/jeremybanks/go-distributed/bencoding"
 	"io"
 	weakrand "math/rand"
 	"net"

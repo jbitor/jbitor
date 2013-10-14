@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
-	"bitbucket.org/jeremybanks/go-distributed/torrentutils"
 	"crypto/sha1"
 	"encoding/hex"
+	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jeremybanks/go-distributed/torrentutils"
 	"os"
 )
 

@@ -1,8 +1,8 @@
 package torrentutils
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"errors"
+	"github.com/jeremybanks/go-distributed/bencoding"
 	"io"
 )
 

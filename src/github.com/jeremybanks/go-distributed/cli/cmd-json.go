@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"encoding/json"
+	"github.com/jeremybanks/go-distributed/bencoding"
 	"io/ioutil"
 	"os"
 )

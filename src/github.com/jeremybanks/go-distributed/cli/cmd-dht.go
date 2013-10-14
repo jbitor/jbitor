@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bitbucket.org/jeremybanks/go-distributed/bencoding"
-	"bitbucket.org/jeremybanks/go-distributed/dht"
 	"encoding/hex"
+	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jeremybanks/go-distributed/dht"
 	"io/ioutil"
 	"net"
 	"os"
