@@ -125,25 +125,34 @@ func cmdDhtHelloWorld(args []string) {
 	if len(args) > 0 {
 		path := args[0]
 
-		// XXX: We shold open and lock the file, so that instances can't clobber.
-		nodeData, err := ioutil.ReadFile(path)
+		file, err := os.OpenFile(path, os.O_RDWR, 0644)
+		defer file.Close()
+
 		if err != nil {
-			logger.Printf("Unable to read existing DHT node (%v). Creating a new one.\n", err)
-			node = dht.NewLocalNode()
+			logger.Fatalf("Unable to open file for DHT node data (%v).\n", err)
+			return
 		} else {
-			nodeDict, err := bencoding.Decode(nodeData)
+			nodeData, err := ioutil.ReadAll(file)
+
 			if err != nil {
-				logger.Fatalf("%v\n", err)
-				return
-			}
+				logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
+				node = dht.NewLocalNode()
+			} else {
+				nodeDict, err := bencoding.Decode(nodeData)
+				if err != nil {
+					logger.Fatalf("%v\n", err)
+					return
+				}
 
-			nodeDictAsDict, ok := nodeDict.(bencoding.Dict)
-			if !ok {
-				logger.Fatalf("\n")
-				return
-			}
+				nodeDictAsDict, ok := nodeDict.(bencoding.Dict)
+				if !ok {
+					logger.Fatalf("\n")
+					return
+				}
 
-			node = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
+				node = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
+				logger.Printf("Loaded local node info from %v.\n", path)
+			}
 		}
 
 		defer func() {
@@ -156,8 +165,9 @@ func cmdDhtHelloWorld(args []string) {
 			}
 
 			logger.Printf("Saving LocalNode state to %v.\n", path)
-			// XXX: These flags give it 0 peermissions!
-			err = ioutil.WriteFile(path, nodeData, 0644)
+			file.Truncate(0)
+			file.WriteAt(nodeData, 0)
+			file.Sync()
 
 			if err != nil {
 				logger.Fatalf("Error writing local node state: %v\n", err)
@@ -203,5 +213,4 @@ func cmdDhtHelloWorld(args []string) {
 	}
 
 	logger.Printf("I know of %v.\n", node.Nodes)
-
 }
