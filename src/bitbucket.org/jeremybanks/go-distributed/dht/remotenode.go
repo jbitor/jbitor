@@ -21,7 +21,7 @@ type RemoteNode struct {
 
 func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 	// Creates a RemoteNode with a known address but an unknown ID.
-	// You may want to .Ping() this node so that it learns its ID!
+	// You may want to .SendPing() this node so that it learns its ID!
 	remote = new(RemoteNode)
 	remote.Id = UnknownNodeId
 	remote.Address = address
@@ -35,10 +35,7 @@ func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
 	remote = new(RemoteNode)
 
 	remote.Id = NodeId(dict["Id"].(bencoding.String))
-	remote.Address = net.UDPAddr{
-		IP:   net.ParseIP(string(dict["Address"].(bencoding.List)[0].(bencoding.String))),
-		Port: int(dict["Address"].(bencoding.List)[1].(bencoding.Int)),
-	}
+	remote.Address = decodeNodeAddress(dict["Address"].(bencoding.String))
 	remote.LastRequestTo = time.Unix(int64(dict["LastRequestToSec"].(bencoding.Int)), 0)
 	remote.LastResponseTo = time.Unix(int64(dict["LastResponseToSec"].(bencoding.Int)), 0)
 	remote.LastRequestFrom = time.Unix(int64(dict["LastRequestFromSec"].(bencoding.Int)), 0)
@@ -52,12 +49,7 @@ func (remote *RemoteNode) MarshalBencodingDict() (dict bencoding.Dict) {
 	dict = bencoding.Dict{
 		"Id": bencoding.String(remote.Id),
 
-		// XXX: Ideally this would use proper compact representation, but for
-		// now maybe just use [[ address, port ]...]
-		"Address": bencoding.List{
-			bencoding.String(remote.Address.IP.String()),
-			bencoding.Int(remote.Address.Port),
-		},
+		"Address": encodeNodeAddress(remote.Address),
 
 		"LastRequestToSec":    bencoding.Int(remote.LastRequestTo.Unix()),
 		"LastResponseToSec":   bencoding.Int(remote.LastResponseTo.Unix()),

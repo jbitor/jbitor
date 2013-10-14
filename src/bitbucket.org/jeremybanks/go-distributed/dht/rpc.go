@@ -14,7 +14,31 @@ type Query struct {
 	Err           chan error
 }
 
-func (local *LocalNode) query(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *Query) {
+func decodeNodeAddress(encoded bencoding.String) (addr net.UDPAddr) {
+	return net.UDPAddr{
+		IP:   net.IPv4(encoded[0], encoded[1], encoded[2], encoded[3]),
+		Port: int(encoded[4])<<8 + int(encoded[5]),
+	}
+}
+
+func encodeNodeAddress(addr net.UDPAddr) (encoded bencoding.String) {
+	if addr.Port >= (1<<32) || addr.Port < 0 {
+		panic("Port out of bounds?")
+	}
+
+	ip4 := addr.IP.To4()
+
+	return bencoding.String([]byte{
+		ip4[0],
+		ip4[1],
+		ip4[2],
+		ip4[3],
+		byte((addr.Port >> 8) & 0xFF),
+		byte(addr.Port & 0xFF),
+	})
+}
+
+func (local *LocalNode) sendQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *Query) {
 	query = new(Query)
 	query.Result = make(chan *bencoding.Dict)
 	query.Err = make(chan error)
@@ -63,11 +87,11 @@ func (local *LocalNode) query(remote *RemoteNode, queryType string, arguments be
 	return query
 }
 
-func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
+func (local *LocalNode) SendPing(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
 	pingResult := make(chan *bencoding.Dict)
 	pingErr := make(chan error)
 
-	query := local.query(remote, "ping", bencoding.Dict{})
+	query := local.sendQuery(remote, "ping", bencoding.Dict{})
 
 	go func() {
 		select {
@@ -90,7 +114,7 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	findResult := make(chan []*RemoteNode)
 	findErr := make(chan error)
 
-	query := local.query(remote, "find_node", bencoding.Dict{
+	query := local.sendQuery(remote, "find_node", bencoding.Dict{
 		"target": bencoding.String(id),
 	})
 
@@ -122,19 +146,12 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	return findResult, findErr
 }
 
-func decodeNodeAddress(encoded bencoding.String) (addr net.UDPAddr) {
-	return net.UDPAddr{
-		IP:   net.IPv4(encoded[0], encoded[1], encoded[2], encoded[3]),
-		Port: int(encoded[4])<<8 + int(encoded[5]),
-	}
-}
-
-func (local *LocalNode) GetPeers(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+func (local *LocalNode) SendGetPeers(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
 	logger.Fatalf("GetPeers() not implemented\n")
 	return
 }
 
-func (local *LocalNode) AnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+func (local *LocalNode) SendAnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
 	logger.Fatalf("AnnouncePeer() not implemented\n")
 	return
 }
@@ -149,7 +166,7 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 
 		if err != nil {
 			logger.Printf("Ignoring UDP read err: %v\n", err)
-			continue
+			continuegit s
 		}
 
 		result, err := bencoding.Decode(response[:n])

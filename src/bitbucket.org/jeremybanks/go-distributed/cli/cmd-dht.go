@@ -33,7 +33,7 @@ func cmdDhtHelloWorld(args []string) {
 	if len(args) > 0 {
 		path := args[0]
 
-		file, err := os.OpenFile(path, os.O_RDWR, 0644)
+		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 		defer file.Close()
 
 		if err != nil {
@@ -44,6 +44,9 @@ func cmdDhtHelloWorld(args []string) {
 
 			if err != nil {
 				logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
+				local = dht.NewLocalNode()
+			} else if len(nodeData) == 0 {
+				logger.Printf("Existing DHT node file was empty. Creating a new one.\n")
 				local = dht.NewLocalNode()
 			} else {
 				nodeDict, err := bencoding.Decode(nodeData)
@@ -101,9 +104,9 @@ func cmdDhtHelloWorld(args []string) {
 	logger.Printf("I know of %v.\n", local.Nodes)
 
 	//	logger.Printf("I am attempting to ping a DHT node at localhost:6881.\n")
-	//	pingResult, pingErr := local.Ping(knownNode)
+	//	pingResult, pingErr := local.SendPing(knownNode)
 	//
-	//	logger.Printf("Ping initiated\n")
+	//	logger.Printf("SendPing initiated\n")
 
 	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
 	logger.Printf("Attempting to FindNode(%v)...", dht.NodeId(nodeId))

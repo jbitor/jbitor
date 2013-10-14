@@ -24,12 +24,8 @@ bin/cli:
 run: bin/cli PHONY
 	@bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
 	@echo
-	@bin/cli json from-bencoding < test-torrents/hello.torrent | tee test-torrents/hello.torrent.json
-	@echo
-	@echo
-	@bin/cli json to-bencoding < test-torrents/hello.torrent.json
-	@echo
-	@echo
 	@bin/cli dht helloworld tmp/dht-node.benc
+	@echo
+	@bin/cli json from-bencoding < tmp/dht-node.benc | python -mjson.tool
 
 PHONY:
