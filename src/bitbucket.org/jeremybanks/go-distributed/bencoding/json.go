@@ -60,7 +60,7 @@ func (n Int) ToJsonable() (jval interface{}, err error) {
 func (str String) ToJsonable() (jval interface{}, err error) {
 	encodedStringPieces := make([][]byte, 0)
 
-	for _, byteValue := range str {
+	for _, byteValue := range []byte(str) {
 		byteAsUtf8Char := make([]byte, 4)
 
 		n := utf8.EncodeRune(byteAsUtf8Char, rune(byteValue))
