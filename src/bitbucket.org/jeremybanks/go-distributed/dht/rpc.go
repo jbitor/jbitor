@@ -166,7 +166,7 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 
 		if err != nil {
 			logger.Printf("Ignoring UDP read err: %v\n", err)
-			continuegit s
+			continue
 		}
 
 		result, err := bencoding.Decode(response[:n])
