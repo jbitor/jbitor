@@ -26,6 +26,6 @@ run: bin/cli PHONY
 	@echo
 	@bin/cli dht helloworld tmp/dht-node.benc
 	@echo
-	@bin/cli json from-bencoding < tmp/dht-node.benc | python -mjson.tool
+	@bin/cli json from-bencoding < tmp/dht-node.benc | python -m json.tool > tmp/dht-node.json
 
 PHONY:
