@@ -28,7 +28,7 @@ func cmdDht(args []string) {
 }
 
 func cmdDhtHelloWorld(args []string) {
-	var node *dht.LocalNode
+	var local *dht.LocalNode
 
 	if len(args) > 0 {
 		path := args[0]
@@ -44,7 +44,7 @@ func cmdDhtHelloWorld(args []string) {
 
 			if err != nil {
 				logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
-				node = dht.NewLocalNode()
+				local = dht.NewLocalNode()
 			} else {
 				nodeDict, err := bencoding.Decode(nodeData)
 				if err != nil {
@@ -58,21 +58,20 @@ func cmdDhtHelloWorld(args []string) {
 					return
 				}
 
-				node = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
+				local = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
 				logger.Printf("Loaded local node info from %v.\n", path)
 			}
 		}
 
 		defer func() {
-			// save node
-			nodeData, err := bencoding.Encode(node)
+			// save LocalNode
+			nodeData, err := bencoding.Encode(local)
 
 			if err != nil {
 				logger.Fatalf("Error encoding local node state: %v\n", err)
 				return
 			}
 
-			logger.Printf("Saving LocalNode state to %v.\n", path)
 			file.Truncate(0)
 			file.WriteAt(nodeData, 0)
 			file.Sync()
@@ -81,44 +80,44 @@ func cmdDhtHelloWorld(args []string) {
 				logger.Fatalf("Error writing local node state: %v\n", err)
 				return
 			}
+
+			logger.Printf("Saved LocalNode state to %v.\n", path)
 		}()
 	} else {
-		node = dht.NewLocalNode()
+		local = dht.NewLocalNode()
 	}
 
 	terminated := make(chan error)
-	go node.Run(terminated)
+	go local.Run(terminated)
 
 	knownNode := dht.RemoteNodeFromAddress(net.UDPAddr{
 		IP:   net.IPv4(127, 0, 0, 1),
 		Port: 6881,
 	})
 
-	knownNode = node.AddOrGetRemoteNode(knownNode)
+	knownNode = local.AddOrGetRemoteNode(knownNode)
 
-	logger.Printf("Hello, I am %v.\n", node)
-	logger.Printf("I know of %v.\n", node.Nodes)
+	logger.Printf("Hello, I am %v.\n", local)
+	logger.Printf("I know of %v.\n", local.Nodes)
 
-	logger.Printf("I am attempting to ping a DHT node at localhost:6881.\n")
-	pingResult, pingErr := node.Ping(knownNode)
-
-	logger.Printf("Ping initiated\n")
+	//	logger.Printf("I am attempting to ping a DHT node at localhost:6881.\n")
+	//	pingResult, pingErr := local.Ping(knownNode)
+	//
+	//	logger.Printf("Ping initiated\n")
 
 	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
-	findResult, findErr := node.FindNode(knownNode, dht.NodeId(nodeId))
+	logger.Printf("Attempting to FindNode(%v)...", dht.NodeId(nodeId))
 
-	for i := 0; i < 2; i++ {
+	findResult, findErr := local.FindNode(knownNode, dht.NodeId(nodeId))
+
+	for len(local.OutstandingQueries) > 0 {
 		select {
-		case result := <-pingResult:
-			logger.Printf("got ping result: %v\n", *result)
-		case result := <-pingErr:
-			logger.Printf("got ping error: %v\n", result)
 		case result := <-findResult:
-			logger.Printf("got find result: %v\n", result)
+			logger.Printf("FindNode result: %v\n", result)
 		case result := <-findErr:
-			logger.Printf("got find error: %v\n", result)
+			logger.Printf("FindNode error: %v\n", result)
 		}
 	}
 
-	logger.Printf("I know of %v.\n", node.Nodes)
+	logger.Printf("I know of %v.\n", local.Nodes)
 }

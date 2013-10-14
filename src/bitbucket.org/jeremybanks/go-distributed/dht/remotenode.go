@@ -25,7 +25,9 @@ func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 	remote = new(RemoteNode)
 	remote.Id = UnknownNodeId
 	remote.Address = address
-	remote.ConsecutiveFailedQueries = 0
+
+	// default values are fine for other fields
+
 	return remote
 }
 

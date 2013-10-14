@@ -3,6 +3,7 @@ package dht
 import (
 	"bitbucket.org/jeremybanks/go-distributed/bencoding"
 	"crypto/rand"
+	"net"
 	"time"
 )
 
@@ -81,6 +82,10 @@ func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 	return pingResult, pingErr
 }
 
+const PEER_CONTACT_INFO_LEN = 6
+const NODE_CONTACT_INFO_ID_LEN = 20
+const NODE_CONTACT_INFO_LEN = 26
+
 func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*RemoteNode, <-chan error) {
 	findResult := make(chan []*RemoteNode)
 	findErr := make(chan error)
@@ -94,7 +99,20 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 		case value := <-query.Result:
 			result := []*RemoteNode{}
 
-			logger.Println("Don't know how to handle:\n", *value)
+			nodesData := (*value)["nodes"].(bencoding.String)
+
+			for offset := 0; offset < len(nodesData); offset += NODE_CONTACT_INFO_LEN {
+				nodeId := nodesData[offset : offset+NODE_CONTACT_INFO_ID_LEN]
+				nodeAddress := decodeNodeAddress(nodesData[offset+NODE_CONTACT_INFO_ID_LEN : offset+NODE_CONTACT_INFO_LEN])
+
+				remote := RemoteNodeFromAddress(nodeAddress)
+				remote.Id = NodeId(nodeId)
+
+				remote = local.AddOrGetRemoteNode(remote)
+
+				result = append(result, remote)
+			}
+
 			findResult <- result
 		case err := <-query.Err:
 			findErr <- err
@@ -104,9 +122,11 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	return findResult, findErr
 }
 
-func decodeNodes(local *LocalNode, nodes bencoding.List) (remote []*RemoteNode) {
-	logger.Fatalf("decodeNode() not implemented\n")
-	return
+func decodeNodeAddress(encoded bencoding.String) (addr net.UDPAddr) {
+	return net.UDPAddr{
+		IP:   net.IPv4(encoded[0], encoded[1], encoded[2], encoded[3]),
+		Port: int(encoded[4])<<8 + int(encoded[5]),
+	}
 }
 
 func (local *LocalNode) GetPeers(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
@@ -159,9 +179,9 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 			continue
 		}
 
-		logger.Printf("Got query response. %v\n", resultD)
-
 		query.Result <- &resultBody
+
+		delete(local.OutstandingQueries, transactionId)
 	}
 
 }

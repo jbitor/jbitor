@@ -94,8 +94,6 @@ func (local *LocalNode) MarshalBencodingDict() (dict bencoding.Dict) {
 func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
 	dict := local.MarshalBencodingDict()
 
-	logger.Printf("Prepared for serialization: %v\n", dict)
-
 	return dict.WriteBencodedTo(writer)
 }
 
