@@ -27,6 +27,10 @@ func (metainfo TorrentMeta) WriteBencodedTo(writer io.Writer) error {
 	return bencoding.Dict(metainfo).WriteBencodedTo(writer)
 }
 
+func (metainfo TorrentMeta) ToJsonable() (interface{}, error) {
+	return bencoding.Dict(metainfo).ToJsonable()
+}
+
 type TorrentFileMeta bencoding.Dict
 
 func (filemeta TorrentFileMeta) WriteBencodedTo(writer io.Writer) error {
@@ -38,4 +42,8 @@ func (filemeta TorrentFileMeta) WriteBencodedTo(writer io.Writer) error {
 	}
 
 	return bencoding.Dict(filemeta).WriteBencodedTo(writer)
+}
+
+func (filemeta TorrentFileMeta) ToJsonable() (interface{}, error) {
+	return bencoding.Dict(filemeta).ToJsonable()
 }

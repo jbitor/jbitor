@@ -1,6 +1,9 @@
 run: bin/cli PHONY
 	@bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
 	@echo
+	@bin/cli json from-bencoding < test-torrents/hello.torrent
+	@echo
+	@echo
 	@bin/cli dht helloworld tmp/dht-node.benc
 
 bin/cli:

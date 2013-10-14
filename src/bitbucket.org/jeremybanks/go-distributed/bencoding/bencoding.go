@@ -11,6 +11,7 @@ import (
 
 type Bencodable interface {
 	WriteBencodedTo(io.Writer) error
+	ToJsonable() (jval interface{}, err error)
 }
 
 type Int int64

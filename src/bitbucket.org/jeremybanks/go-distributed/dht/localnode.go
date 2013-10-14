@@ -99,6 +99,10 @@ func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
 	return dict.WriteBencodedTo(writer)
 }
 
+func (local *LocalNode) ToJsonable() (interface{}, error) {
+	return bencoding.Dict(local.MarshalBencodingDict()).ToJsonable()
+}
+
 // Running
 
 func (local *LocalNode) Run(terminated chan<- error) {
