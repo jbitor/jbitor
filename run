@@ -3,4 +3,4 @@ set -e
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
 make --always-make bin/cli > /dev/null || make --always-make bin/cli
-make run
+bin/cli $*

@@ -1,11 +1,13 @@
 package dht
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"io"
 	weakrand "math/rand"
 	"net"
+	"time"
 )
 
 type LocalNode struct {
@@ -103,7 +105,7 @@ func (local *LocalNode) ToJsonable() (interface{}, error) {
 
 // Running
 
-func (local *LocalNode) Run(terminated chan<- error) {
+func (local *LocalNode) Run(terminate <-chan bool, terminated chan<- error) {
 	// Main loop for LocalPeer's activity.
 	// (Listening to replies and requests.)
 
@@ -120,11 +122,123 @@ func (local *LocalNode) Run(terminated chan<- error) {
 
 	local.Connection = conn
 
-	rpcError := make(chan error)
-	go local.RunRpcListen(rpcError)
+	rpcTerminated := make(chan error)
+	rpcTerminate := make(chan bool)
+	go local.runRpcListen(rpcTerminate, rpcTerminated)
+
+	connectionTerminated := make(chan error)
+	connectionTerminate := make(chan bool)
+	go local.runConnection(connectionTerminate, connectionTerminated)
 
 	select {
-	case err := <-rpcError:
+	case _ = <-terminate:
+		// terminate sub-goroutines
+		rpcTerminate <- true
+
+		// notify caller of non-error termination
+		terminated <- nil
+
+	case err = <-rpcTerminated:
+		logger.Printf("Fatal error from RPC goroutine: %v.\n", err)
 		terminated <- err
+
+	case err = <-connectionTerminated:
+		logger.Printf("Fatal error from connection goroutine: %v.\n", err)
+		terminated <- err
+	}
+
+}
+
+func (local *LocalNode) runConnection(terminate <-chan bool, terminated chan<- error) {
+	for {
+		local.pingRandomNode()
+		local.requestMoreNodes()
+
+		logger.Printf("%v known nodes.\n", len(local.Nodes))
+
+		time.Sleep(15 * time.Second)
+
+		select {
+		case _ = <-terminate:
+			terminated <- nil
+			break
+		default:
+		}
+	}
+}
+
+/*
+DHT: LocalNode running with 16 good remote nodes (123 unknown and 0 bad).
+*/
+
+func (local *LocalNode) pingRandomNode() {
+	var randNode *RemoteNode
+	randNodeOffset := weakrand.Intn(len(local.Nodes))
+	i := 0
+
+	for _, node := range local.Nodes {
+		if i == randNodeOffset {
+			randNode = node
+			break
+		}
+		i++
+	}
+
+	logger.Printf("Pinging a random node: %v.\n", randNode)
+
+	resultChan, errChan := local.Ping(randNode)
+
+	timeoutChan := make(chan error)
+	go func() {
+		time.Sleep(10 * time.Second)
+		timeoutChan <- errors.New("ping timed out")
+	}()
+
+	select {
+	case _ = <-resultChan:
+		logger.Printf("Successfully pinged %v.\n", randNode)
+
+	case err := <-errChan:
+		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+
+	case err := <-timeoutChan:
+		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+	}
+}
+
+func (local *LocalNode) requestMoreNodes() {
+	var randNode *RemoteNode
+	randNodeOffset := weakrand.Intn(len(local.Nodes))
+	i := 0
+
+	for _, node := range local.Nodes {
+		if i == randNodeOffset {
+			randNode = node
+			break
+		}
+		i++
+	}
+
+	target := GenerateNodeId()
+
+	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
+
+	resultChan, errChan := local.FindNode(randNode, target)
+
+	timeoutChan := make(chan error)
+	go func() {
+		time.Sleep(10 * time.Second)
+		timeoutChan <- errors.New("find nodes timed out")
+	}()
+
+	select {
+	case _ = <-resultChan:
+		logger.Printf("Successfully find nodes from %v.\n", randNode)
+
+	case err := <-errChan:
+		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
+
+	case err := <-timeoutChan:
+		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
 	}
 }

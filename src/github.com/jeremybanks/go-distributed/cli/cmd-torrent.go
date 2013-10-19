@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"github.com/jeremybanks/go-distributed/bencoding"
+	//	"github.com/jeremybanks/go-distributed/dht"
 	"github.com/jeremybanks/go-distributed/torrentutils"
 	"os"
 )
@@ -20,6 +21,8 @@ func cmdTorrent(args []string) {
 	switch subcommand {
 	case "make":
 		cmdTorrentMake(subcommandArgs)
+	case "find_peers":
+		cmdTorrentFindPeers(subcommandArgs)
 	default:
 		logger.Fatalf("Unknown torrent subcommand: %v\n", subcommand)
 		return
@@ -78,4 +81,29 @@ func cmdTorrentMake(args []string) {
 	os.Stdout.Sync()
 
 	_ = infoHashHex
+}
+
+func cmdTorrentFindPeers(args []string) {
+	if len(args) != 1 {
+		logger.Fatalf("Usage: %v torrent find_peers INFOHASH\n", os.Args[0])
+		return
+	}
+
+	hexInfoHash := args[0]
+
+	infoHash, err := hex.DecodeString(hexInfoHash)
+
+	if err != nil {
+		logger.Fatalf("Specified infohash is not a valid hex byte string [%v].\n", err)
+		return
+	}
+
+	if len(infoHash) != 20 {
+		logger.Fatalf("Infohash length is wrong (%v instead of 20).\n", len(infoHash))
+		return
+	}
+
+	//	dhtClient := dht.OpenClient(".dht-peer")
+	//	defer dhtClient.Close()
+
 }

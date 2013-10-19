@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/hex"
+	//	"encoding/hex"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/dht"
 	"io/ioutil"
 	"net"
 	"os"
+	"time"
 )
 
 func cmdDht(args []string) {
@@ -66,7 +67,7 @@ func cmdDhtHelloWorld(args []string) {
 			}
 		}
 
-		defer func() {
+		save := func() {
 			// save LocalNode
 			nodeData, err := bencoding.Encode(local)
 
@@ -85,13 +86,23 @@ func cmdDhtHelloWorld(args []string) {
 			}
 
 			logger.Printf("Saved LocalNode state to %v.\n", path)
+		}
+
+		go func() {
+			for {
+				time.Sleep(10 * time.Second)
+				save()
+			}
 		}()
+
+		defer save()
 	} else {
 		local = dht.NewLocalNode()
 	}
 
+	terminate := make(chan bool)
 	terminated := make(chan error)
-	go local.Run(terminated)
+	go local.Run(terminate, terminated)
 
 	knownNode := dht.RemoteNodeFromAddress(net.UDPAddr{
 		IP:   net.IPv4(127, 0, 0, 1),
@@ -101,26 +112,8 @@ func cmdDhtHelloWorld(args []string) {
 	knownNode = local.AddOrGetRemoteNode(knownNode)
 
 	logger.Printf("Hello, I am %v.\n", local)
-	logger.Printf("I know of %v.\n", local.Nodes)
 
-	//	logger.Printf("I am attempting to ping a DHT node at localhost:6881.\n")
-	//	pingResult, pingErr := local.SendPing(knownNode)
-	//
-	//	logger.Printf("SendPing initiated\n")
-
-	nodeId, _ := hex.DecodeString("b7271d0b5577918ee92b1b5378d89e56ad08ba80")
-	logger.Printf("Attempting to FindNode(%v)...", dht.NodeId(nodeId))
-
-	findResult, findErr := local.FindNode(knownNode, dht.NodeId(nodeId))
-
-	for len(local.OutstandingQueries) > 0 {
-		select {
-		case result := <-findResult:
-			logger.Printf("FindNode result: %v\n", result)
-		case result := <-findErr:
-			logger.Printf("FindNode error: %v\n", result)
-		}
+	if err := <-terminated; err != nil {
+		logger.Fatalf("Error in running LocalNode: %v\n", err)
 	}
-
-	logger.Printf("I know of %v.\n", local.Nodes)
 }

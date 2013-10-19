@@ -87,7 +87,7 @@ func (local *LocalNode) sendQuery(remote *RemoteNode, queryType string, argument
 	return query
 }
 
-func (local *LocalNode) SendPing(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
+func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
 	pingResult := make(chan *bencoding.Dict)
 	pingErr := make(chan error)
 
@@ -97,8 +97,14 @@ func (local *LocalNode) SendPing(remote *RemoteNode) (<-chan *bencoding.Dict, <-
 		select {
 		case value := <-query.Result:
 			remote.Id = NodeId((*value)["id"].(bencoding.String))
+
+			remote.ConsecutiveFailedQueries = 0
+
 			pingResult <- value
+
 		case err := <-query.Err:
+			remote.ConsecutiveFailedQueries++
+
 			pingErr <- err
 		}
 	}()
@@ -137,8 +143,13 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 				result = append(result, remote)
 			}
 
+			remote.ConsecutiveFailedQueries = 0
+
 			findResult <- result
+
 		case err := <-query.Err:
+			remote.ConsecutiveFailedQueries++
+
 			findErr <- err
 		}
 	}()
@@ -156,10 +167,12 @@ func (local *LocalNode) SendAnnouncePeer(remote *RemoteNode, id NodeId) (result 
 	return
 }
 
-func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
+func (local *LocalNode) runRpcListen(terminate <-chan bool, terminated chan<- error) {
 	response := new([1024]byte)
 
 	for {
+		logger.Printf("Waiting for next incoming UDP message.\n")
+
 		n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
 
 		_ = remoteAddr
@@ -200,5 +213,4 @@ func (local *LocalNode) RunRpcListen(rpcError chan<- error) {
 
 		delete(local.OutstandingQueries, transactionId)
 	}
-
 }

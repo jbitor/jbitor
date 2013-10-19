@@ -1,7 +1,9 @@
 package main
 
 import (
+	weakrand "math/rand"
 	"os"
+	"time"
 )
 
 func main() {
@@ -12,6 +14,8 @@ func main() {
 
 	command := os.Args[1]
 	commandArgs := os.Args[2:]
+
+	weakrand.Seed(time.Now().UTC().UnixNano())
 
 	switch command {
 	case "torrent":
