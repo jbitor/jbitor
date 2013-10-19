@@ -154,7 +154,10 @@ func (local *LocalNode) runConnection(terminate <-chan bool, terminated chan<- e
 		local.pingRandomNode()
 		local.requestMoreNodes()
 
-		logger.Printf("%v known nodes.\n", len(local.Nodes))
+		info := NodeInfoForLocalNodeForNow(local)
+
+		logger.Printf("LocalNode running with %v good nodes (%v unknown and %v bad).\n",
+			info.GoodNodes, info.UnknownNodes, info.BadNodes)
 
 		time.Sleep(15 * time.Second)
 

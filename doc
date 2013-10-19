@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
+python -m webbrowser http://localhost:9101/pkg/github.com/jeremybanks/go-distributed/
+godoc -http=:9101 -index
+

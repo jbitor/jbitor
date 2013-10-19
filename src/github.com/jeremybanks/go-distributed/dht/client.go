@@ -1,5 +1,28 @@
 package dht
 
+type ConnectionInfo struct {
+	GoodNodes    int
+	UnknownNodes int
+	BadNodes     int
+}
+
+func NodeInfoForLocalNodeForNow(local *LocalNode) ConnectionInfo {
+	info := ConnectionInfo{GoodNodes: 0, UnknownNodes: 0, BadNodes: 0}
+
+	for _, node := range local.Nodes {
+		switch node.Status() {
+		case STATUS_UNKNOWN:
+			info.UnknownNodes++
+		case STATUS_GOOD:
+			info.GoodNodes++
+		case STATUS_BAD:
+			info.BadNodes++
+		}
+	}
+
+	return info
+}
+
 /*
 import (
 	"github.com/jeremybanks/go-distributed/torrent"

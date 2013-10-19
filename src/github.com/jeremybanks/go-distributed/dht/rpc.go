@@ -209,7 +209,8 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 			} else if nodesOk {
 				result, err := local.decodeNodesString(nodesData, remote)
 				if err != nil {
-					getPeersErrgitgi <- err
+					remote.ConsecutiveFailedQueries++
+					getPeersErr <- err
 					return
 				}
 

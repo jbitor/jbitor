@@ -1,3 +1,6 @@
+// Package bencoding implements types representing, and functions for
+// encoding/decoding, data in BitTorrent's Bencoding format as specified in
+// BEP 3 (http://www.bittorrent.org/beps/bep_0003.html#bencoding).
 package bencoding
 
 import (
