@@ -11,7 +11,7 @@ import (
 
 type NodeId string // of length 20
 
-var UnknownNodeId NodeId = NodeId("") // empty string is unkown node ID
+var UnknownNodeId NodeId = NodeId("") // empty string is used for unknown node ID
 
 func GenerateNodeId() NodeId {
 	// Securely generates a random NodeID.

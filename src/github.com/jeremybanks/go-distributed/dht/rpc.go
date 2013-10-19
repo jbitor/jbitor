@@ -2,7 +2,10 @@ package dht
 
 import (
 	"crypto/rand"
+	"errors"
+	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jeremybanks/go-distributed/torrent"
 	"net"
 	"time"
 )
@@ -157,12 +160,68 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	return findResult, findErr
 }
 
-func (local *LocalNode) SendGetPeers(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
-	logger.Fatalf("GetPeers() not implemented\n")
-	return
+func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
+	peersResult := make(chan []*torrent.RemotePeer)
+	nodesResult := make(chan []*RemoteNode)
+	getPeersErr := make(chan error)
+
+	query := local.sendQuery(remote, "get_peers", bencoding.Dict{
+		"info_hash": bencoding.String(infoHash),
+	})
+
+	go func() {
+		select {
+		case value := <-query.Result:
+			peerData, peersOk := (*value)["values"].(bencoding.List)
+			nodesData, nodesOk := (*value)["nodes"].(bencoding.String)
+
+			if peersOk {
+				result := make([]*torrent.RemotePeer, len(peerData))
+
+				for i, data := range peerData {
+					dataStr, ok := data.(bencoding.String)
+					if !ok {
+						getPeersErr <- errors.New(".values contained non-string")
+						return
+					}
+
+					addr := torrent.DecodePeerAddress(dataStr)
+					result[i] = &torrent.RemotePeer{Address: addr}
+				}
+
+				remote.ConsecutiveFailedQueries = 0
+
+				peersResult <- result
+			} else if nodesOk {
+				result := make([]*RemoteNode, len(nodesData)/26)
+
+				for i := 0; i < len(nodesData)/26; i++ {
+					dataStr := bencoding.String([]byte(nodesData)[i*26 : (i+1)*26])
+
+					addr := decodeNodeAddress(dataStr)
+					result[i] = local.AddOrGetRemoteNode(&RemoteNode{Address: addr})
+				}
+
+				remote.ConsecutiveFailedQueries = 0
+
+				nodesResult <- result
+			} else {
+				getPeersErr <- errors.New(fmt.Sprintf("response did not include peer or node list - %v", *value))
+
+				remote.ConsecutiveFailedQueries += 3 // hackily punish invalid data
+			}
+
+		case err := <-query.Err:
+			remote.ConsecutiveFailedQueries++
+
+			getPeersErr <- err
+		}
+	}()
+
+	return peersResult, nodesResult, getPeersErr
 }
 
-func (local *LocalNode) SendAnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+func (local *LocalNode) AnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
 	logger.Fatalf("AnnouncePeer() not implemented\n")
 	return
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	//	"encoding/hex"
+	"encoding/hex"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/dht"
 	"io/ioutil"
@@ -102,6 +102,7 @@ func cmdDhtHelloWorld(args []string) {
 
 	terminate := make(chan bool)
 	terminated := make(chan error)
+
 	go local.Run(terminate, terminated)
 
 	knownNode := dht.RemoteNodeFromAddress(net.UDPAddr{
@@ -112,6 +113,19 @@ func cmdDhtHelloWorld(args []string) {
 	knownNode = local.AddOrGetRemoteNode(knownNode)
 
 	logger.Printf("Hello, I am %v.\n", local)
+
+	infoHash, _ := hex.DecodeString("5497a53543938b77ef660939d3b32e02be7bc213")
+	logger.Printf("Trying to GetPeers for %v.\n", infoHash)
+	peersResult, nodesResult, errChan := local.GetPeers(knownNode, string(infoHash))
+
+	select {
+	case result := <-peersResult:
+		logger.Printf("GetPeers got peers: %v\n", result)
+	case result := <-nodesResult:
+		logger.Printf("GetPeers got nodes: %v\n", result)
+	case err := <-errChan:
+		logger.Printf("GetPeers had error: %v\n", err)
+	}
 
 	if err := <-terminated; err != nil {
 		logger.Fatalf("Error in running LocalNode: %v\n", err)
