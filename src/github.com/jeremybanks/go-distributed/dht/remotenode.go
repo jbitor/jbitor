@@ -17,6 +17,11 @@ type RemoteNode struct {
 	LastRequestFrom  time.Time
 
 	ConsecutiveFailedQueries int
+
+	Source *RemoteNode
+	// If specified, identifies the RemoteNode which gave us this Node.
+	// This could be used to identify a Source which provides us with many
+	// bad nodes.
 }
 
 func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {

@@ -107,7 +107,6 @@ func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 
 		case err := <-query.Err:
 			remote.ConsecutiveFailedQueries++
-
 			pingErr <- err
 		}
 	}()
@@ -118,6 +117,25 @@ func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 const PEER_CONTACT_INFO_LEN = 6
 const NODE_CONTACT_INFO_ID_LEN = 20
 const NODE_CONTACT_INFO_LEN = 26
+
+func (local *LocalNode) decodeNodesString(nodesData bencoding.String, source *RemoteNode) ([]*RemoteNode, error) {
+	result := make([]*RemoteNode, 0)
+
+	for offset := 0; offset < len(nodesData); offset += NODE_CONTACT_INFO_LEN {
+		nodeId := nodesData[offset : offset+NODE_CONTACT_INFO_ID_LEN]
+		nodeAddress := decodeNodeAddress(nodesData[offset+NODE_CONTACT_INFO_ID_LEN : offset+NODE_CONTACT_INFO_LEN])
+
+		resultRemote := RemoteNodeFromAddress(nodeAddress)
+		resultRemote.Source = source
+		resultRemote.Id = NodeId(nodeId)
+
+		resultRemote = local.AddOrGetRemoteNode(resultRemote)
+
+		result = append(result, resultRemote)
+	}
+
+	return result, nil
+}
 
 func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*RemoteNode, <-chan error) {
 	findResult := make(chan []*RemoteNode)
@@ -130,29 +148,24 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	go func() {
 		select {
 		case value := <-query.Result:
-			result := []*RemoteNode{}
+			nodesData, ok := (*value)["nodes"].(bencoding.String)
+			if !ok {
+				remote.ConsecutiveFailedQueries++
+				findErr <- errors.New(".nodes string does not exist")
+				return
+			}
 
-			nodesData := (*value)["nodes"].(bencoding.String)
-
-			for offset := 0; offset < len(nodesData); offset += NODE_CONTACT_INFO_LEN {
-				nodeId := nodesData[offset : offset+NODE_CONTACT_INFO_ID_LEN]
-				nodeAddress := decodeNodeAddress(nodesData[offset+NODE_CONTACT_INFO_ID_LEN : offset+NODE_CONTACT_INFO_LEN])
-
-				remote := RemoteNodeFromAddress(nodeAddress)
-				remote.Id = NodeId(nodeId)
-
-				remote = local.AddOrGetRemoteNode(remote)
-
-				result = append(result, remote)
+			result, err := local.decodeNodesString(nodesData, remote)
+			if err != nil {
+				findErr <- err
+				return
 			}
 
 			remote.ConsecutiveFailedQueries = 0
-
 			findResult <- result
 
 		case err := <-query.Err:
 			remote.ConsecutiveFailedQueries++
-
 			findErr <- err
 		}
 	}()
@@ -182,6 +195,7 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 					dataStr, ok := data.(bencoding.String)
 					if !ok {
 						getPeersErr <- errors.New(".values contained non-string")
+						remote.ConsecutiveFailedQueries++
 						return
 					}
 
@@ -193,27 +207,21 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 
 				peersResult <- result
 			} else if nodesOk {
-				result := make([]*RemoteNode, len(nodesData)/26)
-
-				for i := 0; i < len(nodesData)/26; i++ {
-					dataStr := bencoding.String([]byte(nodesData)[i*26 : (i+1)*26])
-
-					addr := decodeNodeAddress(dataStr)
-					result[i] = local.AddOrGetRemoteNode(&RemoteNode{Address: addr})
+				result, err := local.decodeNodesString(nodesData, remote)
+				if err != nil {
+					getPeersErrgitgi <- err
+					return
 				}
 
 				remote.ConsecutiveFailedQueries = 0
-
 				nodesResult <- result
 			} else {
 				getPeersErr <- errors.New(fmt.Sprintf("response did not include peer or node list - %v", *value))
-
-				remote.ConsecutiveFailedQueries += 3 // hackily punish invalid data
+				remote.ConsecutiveFailedQueries++
 			}
 
 		case err := <-query.Err:
 			remote.ConsecutiveFailedQueries++
-
 			getPeersErr <- err
 		}
 	}()
