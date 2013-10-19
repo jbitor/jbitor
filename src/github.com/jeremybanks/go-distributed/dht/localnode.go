@@ -219,7 +219,7 @@ func (local *LocalNode) requestMoreNodes() {
 		i++
 	}
 
-	target := GenerateNodeId()
+	target := GenerateWeakNodeId()
 
 	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
 

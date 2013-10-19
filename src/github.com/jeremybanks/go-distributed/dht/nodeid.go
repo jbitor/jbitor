@@ -6,6 +6,7 @@ package dht
 import (
 	"crypto/rand"
 	"encoding/hex"
+	weakrand "math/rand"
 )
 
 type NodeId string // of length 20
@@ -13,18 +14,30 @@ type NodeId string // of length 20
 var UnknownNodeId NodeId = NodeId("") // empty string is unkown node ID
 
 func GenerateNodeId() NodeId {
-	// Generates a new random NodeID.
-	// Panics if unable to generate random number.
+	// Securely generates a random NodeID.
+	// Panics if unable to generate secure random number.
 
 	bytes := new([20]byte)
 	n, err := rand.Read(bytes[:])
 
 	if n < 20 {
-		panic("too few bytes generated for some reason?")
+		panic("unable to generate 20 secure random bytes for node ID")
 	}
 
 	if err != nil {
 		panic(err)
+	}
+
+	return NodeId(bytes[:])
+}
+
+func GenerateWeakNodeId() NodeId {
+	// Generates a random NodeID using the weak/fast RNG.
+
+	bytes := new([20]byte)
+
+	for i := range bytes {
+		bytes[i] = byte(weakrand.Int() & 0xFF)
 	}
 
 	return NodeId(bytes[:])
