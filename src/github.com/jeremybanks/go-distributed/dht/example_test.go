@@ -1,0 +1,28 @@
+package dht_test
+
+import (
+	"fmt"
+	"github.com/jeremybanks/go-distributed/dht"
+	"github.com/jeremybanks/go-distributed/torrent"
+)
+
+// Attempts to find peers for an Ubuntu Torrent.
+func ExampleClient() {
+	infoHash, _ := torrent.BTIDFromHex("5497a53543938b77ef660939d3b32e02be7bc213")
+
+	c, err := dht.OpenClient(".dht")
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	defer c.Close()
+
+	peers, err := c.GetPeers(infoHash)
+	if err != nil {
+		fmt.Printf("Unable to find peers for %v.\n", infoHash)
+		return
+	}
+
+	fmt.Printf("Found peers: %v.\n", peers)
+}

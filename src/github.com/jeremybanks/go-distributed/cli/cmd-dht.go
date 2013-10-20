@@ -1,11 +1,9 @@
-package main
+package cli
 
 import (
-	"encoding/hex"
-	"github.com/jeremybanks/go-distributed/bencoding"
+	"fmt"
 	"github.com/jeremybanks/go-distributed/dht"
-	"io/ioutil"
-	"net"
+	"github.com/jeremybanks/go-distributed/torrent"
 	"os"
 	"time"
 )
@@ -20,16 +18,71 @@ func cmdDht(args []string) {
 	subcommandArgs := args[1:]
 
 	switch subcommand {
-	case "helloworld":
-		cmdDhtHelloWorld(subcommandArgs)
+	case "connect":
+		cmdDhtConnect(subcommandArgs)
+	case "get-peers":
+		cmdDhtGetPeers(subcommandArgs)
 	default:
 		logger.Fatalf("Unknown dht subcommand: %v\n", subcommand)
 		return
 	}
 }
 
+func cmdDhtConnect(args []string) {
+	if len(args) != 1 {
+		logger.Fatalf("Usage: %v dht connect PATH.benc\n", os.Args[0])
+		return
+	}
+
+	path := args[0]
+	client, err := dht.OpenClient(path)
+	if err != nil {
+		logger.Fatalf("Unable to open client: %v\n", err)
+		return
+	}
+
+	for {
+		client.Save()
+		time.Sleep(15 * time.Second)
+	}
+}
+
+func cmdDhtGetPeers(args []string) {
+	if len(args) != 1 {
+		logger.Fatalf("Usage: %v torrent get-peers INFOHASH\n", os.Args[0])
+		return
+	}
+
+	infoHash, err := torrent.BTIDFromHex(args[0])
+
+	if err != nil {
+		logger.Fatalf("Specified string was not a valid hex infohash [%v].\n", err)
+		return
+	}
+
+	dhtClient, err := dht.OpenClient(".dht-peer")
+	if err != nil {
+		logger.Fatalf("Unable to open .dht-peer: %v\n", err)
+		return
+	}
+
+	defer dhtClient.Close()
+
+	peers, err := dhtClient.GetPeers(infoHash)
+
+	if err != nil {
+		logger.Fatalf("Unable to find peers: %v\n", err)
+	}
+
+	logger.Printf("Found peers for %v:\n", infoHash)
+	for _, peer := range peers {
+		fmt.Println(peer)
+	}
+}
+
+/*
 func cmdDhtHelloWorld(args []string) {
-	var local *dht.LocalNode
+	var local *dht.localNode
 
 	if len(args) > 0 {
 		path := args[0]
@@ -45,10 +98,10 @@ func cmdDhtHelloWorld(args []string) {
 
 			if err != nil {
 				logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
-				local = dht.NewLocalNode()
+				local = dht.NewlocalNode()
 			} else if len(nodeData) == 0 {
 				logger.Printf("Existing DHT node file was empty. Creating a new one.\n")
-				local = dht.NewLocalNode()
+				local = dht.NewlocalNode()
 			} else {
 				nodeDict, err := bencoding.Decode(nodeData)
 				if err != nil {
@@ -62,13 +115,13 @@ func cmdDhtHelloWorld(args []string) {
 					return
 				}
 
-				local = dht.LocalNodeFromBencodingDict(nodeDictAsDict)
+				local = dht.localNodeFromBencodingDict(nodeDictAsDict)
 				logger.Printf("Loaded local node info from %v.\n", path)
 			}
 		}
 
 		save := func() {
-			// save LocalNode
+			// save localNode
 			nodeData, err := bencoding.Encode(local)
 
 			if err != nil {
@@ -85,7 +138,7 @@ func cmdDhtHelloWorld(args []string) {
 				return
 			}
 
-			logger.Printf("Saved LocalNode state to %v.\n", path)
+			logger.Printf("Saved localNode state to %v.\n", path)
 		}
 
 		go func() {
@@ -97,7 +150,7 @@ func cmdDhtHelloWorld(args []string) {
 
 		defer save()
 	} else {
-		local = dht.NewLocalNode()
+		local = dht.NewlocalNode()
 	}
 
 	terminate := make(chan bool)
@@ -128,6 +181,7 @@ func cmdDhtHelloWorld(args []string) {
 	}
 
 	if err := <-terminated; err != nil {
-		logger.Fatalf("Error in running LocalNode: %v\n", err)
+		logger.Fatalf("Error in running localNode: %v\n", err)
 	}
 }
+*/

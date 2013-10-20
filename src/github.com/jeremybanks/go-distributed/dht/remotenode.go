@@ -3,12 +3,13 @@ package dht
 import (
 	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jeremybanks/go-distributed/torrent"
 	"net"
 	"time"
 )
 
 type RemoteNode struct {
-	Id      NodeId // may be unknown
+	Id      torrent.BTID // may be unknown
 	Address net.UDPAddr
 
 	LastRequestTo    time.Time
@@ -28,7 +29,7 @@ func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 	// Creates a RemoteNode with a known address but an unknown ID.
 	// You may want to .SendPing() this node so that it learns its ID!
 	remote = new(RemoteNode)
-	remote.Id = UnknownNodeId
+	remote.Id = ""
 	remote.Address = address
 
 	// default values are fine for other fields
@@ -39,7 +40,7 @@ func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
 	remote = new(RemoteNode)
 
-	remote.Id = NodeId(dict["Id"].(bencoding.String))
+	remote.Id = torrent.BTID(dict["Id"].(bencoding.String))
 	remote.Address = decodeNodeAddress(dict["Address"].(bencoding.String))
 	remote.LastRequestTo = time.Unix(int64(dict["LastRequestToSec"].(bencoding.Int)), 0)
 	remote.LastResponseTo = time.Unix(int64(dict["LastResponseToSec"].(bencoding.Int)), 0)

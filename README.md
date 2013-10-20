@@ -7,18 +7,28 @@ git: https://github.com/jeremybanks/go-distributed.git
 
 ### Implemented Functionality
 
-#### `bin/cli torrent create TARGET > TARGET.torrent`
+#### `./run torrent create TARGET > TARGET.torrent`
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
 
-#### `bin/cli json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
+#### `/run dht connect PATH.benc`
 
-Used to convert between equvialent JSON and Bencoding data. Data that does not have an equivalent representation in the other format will cause an error.
+Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated. State will be persisted in a bencoded file at the specified path. This will maintain a large list of healthy nodes, bootstrapped from the common bootstrap nodes.
 
-#### `bin/cli dht hellworld PATH.benc`
+#### `/run dht get-peers INFOHASH`
 
-Uses an existing node at `localhost:6118` to establish a mainline DHT peer list, persisted at the specified path.
+Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
+
+#### `/run json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
+
+Used to convert between equivalent JSON and Bencoding data. DaFindta that does not have an equivalent representation in the other format will cause an error.
 
 ---
 
-Copyright 2013 Jeremy Banks <<jeremy@jeremybanks.ca>>
+Use `./doc` to run `godoc` and open a browser pointing at `go-distributed`.
+
+---
+
+Copyright 2013 Jeremy Banks <<jeremy@jeremybanks.ca>>.
+
+Currently released under the GPLv3. Maybe BSD later.

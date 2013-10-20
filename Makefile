@@ -1,4 +1,4 @@
-bin/cli:
+bin/distributed:
 	### Formatting...
 	#
 	go fmt github.com/jeremybanks/go-distributed/bencoding
@@ -6,6 +6,7 @@ bin/cli:
 	go fmt github.com/jeremybanks/go-distributed/torrentutils
 	go fmt github.com/jeremybanks/go-distributed/torrent
 	go fmt github.com/jeremybanks/go-distributed/cli
+	go fmt github.com/jeremybanks/go-distributed/cli/distributed
 	#
 	### Installing packages...
 	#
@@ -14,6 +15,7 @@ bin/cli:
 	go install github.com/jeremybanks/go-distributed/torrentutils
 	go install github.com/jeremybanks/go-distributed/torrent
 	go install github.com/jeremybanks/go-distributed/cli
+	go install github.com/jeremybanks/go-distributed/cli/distributed
 	#
 	### Testing...
 	#
@@ -22,13 +24,14 @@ bin/cli:
 	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/torrentutils
 	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/torrent
 	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/cli
+	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/cli/distributed
 	#
 
-hello: bin/cli PHONY
-	@bin/cli torrent make test-torrents/hello/ > test-torrents/hello.torrent
+hello: bin/distributed PHONY
+	@bin/distributed torrent make test-torrents/hello/ > test-torrents/hello.torrent
 	@echo
-	@bin/cli dht helloworld tmp/dht-node.benc
+	@bin/distributed dht helloworld tmp/dht-node.benc
 	@echo
-	@bin/cli json from-bencoding < tmp/dht-node.benc | python -m json.tool > tmp/dht-node.json
+	@bin/distributed json from-bencoding < tmp/dht-node.benc | python -m json.tool > tmp/dht-node.json
 
 PHONY:

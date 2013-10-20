@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type Query struct {
+type outstandingQuery struct {
 	TransactionId string
 	Remote        *RemoteNode
 	Result        chan *bencoding.Dict
@@ -41,8 +41,8 @@ func encodeNodeAddress(addr net.UDPAddr) (encoded bencoding.String) {
 	})
 }
 
-func (local *LocalNode) sendQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *Query) {
-	query = new(Query)
+func (local *localNode) sendoutstandingQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *outstandingQuery) {
+	query = new(outstandingQuery)
 	query.Result = make(chan *bencoding.Dict)
 	query.Err = make(chan error)
 	query.Remote = remote
@@ -63,6 +63,8 @@ func (local *LocalNode) sendQuery(remote *RemoteNode, queryType string, argument
 	transactionId := new([4]byte)
 	if _, err := rand.Read(transactionId[:]); err != nil {
 		query.Err <- err
+		close(query.Result)
+		close(query.Err)
 		return
 	}
 
@@ -76,30 +78,34 @@ func (local *LocalNode) sendQuery(remote *RemoteNode, queryType string, argument
 
 	if err != nil {
 		query.Err <- err
+		close(query.Result)
+		close(query.Err)
 		return
 	}
 
 	remote.LastRequestTo = time.Now()
 
 	go func() {
-		// XXX:
-		// Does this wait longer than necessary to send the packet?
+		// XXX: Does this wait longer than necessary to send the packet?
 		local.Connection.WriteTo(encodedMessage, &remote.Address)
 	}()
 
 	return query
 }
 
-func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
+func (local *localNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan error) {
 	pingResult := make(chan *bencoding.Dict)
 	pingErr := make(chan error)
 
-	query := local.sendQuery(remote, "ping", bencoding.Dict{})
+	query := local.sendoutstandingQuery(remote, "ping", bencoding.Dict{})
 
 	go func() {
+		defer close(pingResult)
+		defer close(pingErr)
+
 		select {
 		case value := <-query.Result:
-			remote.Id = NodeId((*value)["id"].(bencoding.String))
+			remote.Id = torrent.BTID((*value)["id"].(bencoding.String))
 
 			remote.ConsecutiveFailedQueries = 0
 
@@ -114,20 +120,20 @@ func (local *LocalNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 	return pingResult, pingErr
 }
 
-const PEER_CONTACT_INFO_LEN = 6
-const NODE_CONTACT_INFO_ID_LEN = 20
-const NODE_CONTACT_INFO_LEN = 26
+const peerContactInfoLen = 6
+const nodeContactInfoIdLen = 20
+const nodeContactInfoLen = 26
 
-func (local *LocalNode) decodeNodesString(nodesData bencoding.String, source *RemoteNode) ([]*RemoteNode, error) {
+func (local *localNode) decodeNodesString(nodesData bencoding.String, source *RemoteNode) ([]*RemoteNode, error) {
 	result := make([]*RemoteNode, 0)
 
-	for offset := 0; offset < len(nodesData); offset += NODE_CONTACT_INFO_LEN {
-		nodeId := nodesData[offset : offset+NODE_CONTACT_INFO_ID_LEN]
-		nodeAddress := decodeNodeAddress(nodesData[offset+NODE_CONTACT_INFO_ID_LEN : offset+NODE_CONTACT_INFO_LEN])
+	for offset := 0; offset < len(nodesData); offset += nodeContactInfoLen {
+		nodeId := nodesData[offset : offset+nodeContactInfoIdLen]
+		nodeAddress := decodeNodeAddress(nodesData[offset+nodeContactInfoIdLen : offset+nodeContactInfoLen])
 
 		resultRemote := RemoteNodeFromAddress(nodeAddress)
 		resultRemote.Source = source
-		resultRemote.Id = NodeId(nodeId)
+		resultRemote.Id = torrent.BTID(nodeId)
 
 		resultRemote = local.AddOrGetRemoteNode(resultRemote)
 
@@ -137,15 +143,18 @@ func (local *LocalNode) decodeNodesString(nodesData bencoding.String, source *Re
 	return result, nil
 }
 
-func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*RemoteNode, <-chan error) {
+func (local *localNode) FindNode(remote *RemoteNode, id torrent.BTID) (<-chan []*RemoteNode, <-chan error) {
 	findResult := make(chan []*RemoteNode)
 	findErr := make(chan error)
 
-	query := local.sendQuery(remote, "find_node", bencoding.Dict{
+	query := local.sendoutstandingQuery(remote, "find_node", bencoding.Dict{
 		"target": bencoding.String(id),
 	})
 
 	go func() {
+		defer close(findErr)
+		defer close(findResult)
+
 		select {
 		case value := <-query.Result:
 			nodesData, ok := (*value)["nodes"].(bencoding.String)
@@ -173,16 +182,20 @@ func (local *LocalNode) FindNode(remote *RemoteNode, id NodeId) (<-chan []*Remot
 	return findResult, findErr
 }
 
-func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
+func (local *localNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
 	peersResult := make(chan []*torrent.RemotePeer)
 	nodesResult := make(chan []*RemoteNode)
 	getPeersErr := make(chan error)
 
-	query := local.sendQuery(remote, "get_peers", bencoding.Dict{
+	query := local.sendoutstandingQuery(remote, "get_peers", bencoding.Dict{
 		"info_hash": bencoding.String(infoHash),
 	})
 
 	go func() {
+		defer close(peersResult)
+		defer close(nodesResult)
+		defer close(getPeersErr)
+
 		select {
 		case value := <-query.Result:
 			peerData, peersOk := (*value)["values"].(bencoding.List)
@@ -199,7 +212,13 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 						return
 					}
 
-					addr := torrent.DecodePeerAddress(dataStr)
+					addr, err := torrent.DecodePeerAddress(dataStr)
+					if err != nil {
+						remote.ConsecutiveFailedQueries++
+						getPeersErr <- err
+						return
+					}
+
 					result[i] = &torrent.RemotePeer{Address: addr}
 				}
 
@@ -217,8 +236,8 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 				remote.ConsecutiveFailedQueries = 0
 				nodesResult <- result
 			} else {
-				getPeersErr <- errors.New(fmt.Sprintf("response did not include peer or node list - %v", *value))
 				remote.ConsecutiveFailedQueries++
+				getPeersErr <- errors.New(fmt.Sprintf("response did not include peer or node list - %v", *value))
 			}
 
 		case err := <-query.Err:
@@ -230,12 +249,12 @@ func (local *LocalNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []
 	return peersResult, nodesResult, getPeersErr
 }
 
-func (local *LocalNode) AnnouncePeer(remote *RemoteNode, id NodeId) (result <-chan *bencoding.Dict, err <-chan error) {
+func (local *localNode) AnnouncePeer(remote *RemoteNode, id torrent.BTID) (result <-chan *bencoding.Dict, err <-chan error) {
 	logger.Fatalf("AnnouncePeer() not implemented\n")
 	return
 }
 
-func (local *LocalNode) runRpcListen(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) runRpcListen(terminate <-chan bool, terminated chan<- error) {
 	response := new([1024]byte)
 
 	for {

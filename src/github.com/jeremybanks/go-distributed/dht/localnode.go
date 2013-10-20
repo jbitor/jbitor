@@ -4,36 +4,46 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jeremybanks/go-distributed/torrent"
 	"io"
 	weakrand "math/rand"
 	"net"
 	"time"
 )
 
-type LocalNode struct {
-	Id                 NodeId
+/*
+localNodes is a DHT node implementation. Currently, it only supports the
+client components of a node -- it does not maintain a proper routing table
+and cannot respond to queries.
+*/
+type localNode struct {
+	Id                 torrent.BTID
 	Port               int
 	Connection         *net.UDPConn
-	Nodes              map[string]*RemoteNode // is not a spec-compliant routing-table
-	OutstandingQueries map[string]*Query
+	Nodes              map[string]*RemoteNode
+	OutstandingQueries map[string]*outstandingQuery
 }
 
-// how do you de-duplicate/index nodes in a standard way?
+func newLocalNode() (local *localNode) {
+	id, err := torrent.SecureRandomBTID()
+	if err != nil {
+		// You used up all the entropy!
+		panic(err)
+	}
 
-func NewLocalNode() (local *LocalNode) {
-	local = new(LocalNode)
-	local.Id = GenerateNodeId()
+	local = new(localNode)
+	local.Id = id
 	local.Port = 1024 + weakrand.Intn(8192)
-	local.OutstandingQueries = make(map[string]*Query)
+	local.OutstandingQueries = make(map[string]*outstandingQuery)
 	local.Nodes = map[string]*RemoteNode{}
 	return local
 }
 
-func (local *LocalNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
+func (local *localNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 	// If a node with the same address is already in .Nodes, returns that node.
 	// Otherwise, add remote to .Nodes and return it.
 
-	key := remoteNodeKey(remote.Address)
+	key := RemoteNodeKey(remote.Address)
 
 	if existingRemote, ok := local.Nodes[key]; ok {
 		remote = existingRemote
@@ -45,22 +55,22 @@ func (local *LocalNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 
 }
 
-func (local *LocalNode) String() string {
-	return fmt.Sprintf("<LocalNode %v on :%v>", local.Id, local.Port)
+func (local *localNode) String() string {
+	return fmt.Sprintf("<localNode %v on :%v>", local.Id, local.Port)
 }
 
-func remoteNodeKey(addr net.UDPAddr) string {
+func RemoteNodeKey(addr net.UDPAddr) string {
 	return fmt.Sprintf("%v:%v", addr.IP, addr.Port)
 }
 
 // Bencoding
 
-func LocalNodeFromBencodingDict(dict bencoding.Dict) (local *LocalNode) {
-	local = new(LocalNode)
+func localNodeFromBencodingDict(dict bencoding.Dict) (local *localNode) {
+	local = new(localNode)
 
-	local.Id = NodeId(dict["Id"].(bencoding.String))
+	local.Id = torrent.BTID(dict["Id"].(bencoding.String))
 	local.Port = int(dict["Port"].(bencoding.Int))
-	local.OutstandingQueries = make(map[string]*Query)
+	local.OutstandingQueries = make(map[string]*outstandingQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
 	for _, nodeDict := range dict["Nodes"].(bencoding.List) {
@@ -71,10 +81,10 @@ func LocalNodeFromBencodingDict(dict bencoding.Dict) (local *LocalNode) {
 	return local
 }
 
-func (local *LocalNode) MarshalBencodingDict() (dict bencoding.Dict) {
+func (local *localNode) MarshalBencodingDict() (dict bencoding.Dict) {
 	dict = bencoding.Dict{}
 
-	if local.Id != UnknownNodeId {
+	if local.Id != "" {
 		dict["Id"] = bencoding.String(local.Id)
 	}
 
@@ -93,19 +103,19 @@ func (local *LocalNode) MarshalBencodingDict() (dict bencoding.Dict) {
 	return dict
 }
 
-func (local *LocalNode) WriteBencodedTo(writer io.Writer) error {
+func (local *localNode) WriteBencodedTo(writer io.Writer) error {
 	dict := local.MarshalBencodingDict()
 
 	return dict.WriteBencodedTo(writer)
 }
 
-func (local *LocalNode) ToJsonable() (interface{}, error) {
+func (local *localNode) ToJsonable() (interface{}, error) {
 	return bencoding.Dict(local.MarshalBencodingDict()).ToJsonable()
 }
 
 // Running
 
-func (local *LocalNode) Run(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) Run(terminate <-chan bool, terminated chan<- error) {
 	// Main loop for LocalPeer's activity.
 	// (Listening to replies and requests.)
 
@@ -117,6 +127,7 @@ func (local *LocalNode) Run(terminate <-chan bool, terminated chan<- error) {
 
 	if err != nil {
 		terminated <- err
+		close(terminated)
 		return
 	}
 
@@ -124,39 +135,43 @@ func (local *LocalNode) Run(terminate <-chan bool, terminated chan<- error) {
 
 	rpcTerminated := make(chan error)
 	rpcTerminate := make(chan bool)
-	go local.runRpcListen(rpcTerminate, rpcTerminated)
+	go func() { local.runRpcListen(rpcTerminate, rpcTerminated) }()
 
 	connectionTerminated := make(chan error)
 	connectionTerminate := make(chan bool)
-	go local.runConnection(connectionTerminate, connectionTerminated)
+	go func() { local.runConnection(connectionTerminate, connectionTerminated) }()
 
 	select {
 	case _ = <-terminate:
 		// terminate sub-goroutines
 		rpcTerminate <- true
+		close(rpcTerminate)
 
 		// notify caller of non-error termination
 		terminated <- nil
+		close(terminated)
 
 	case err = <-rpcTerminated:
 		logger.Printf("Fatal error from RPC goroutine: %v.\n", err)
 		terminated <- err
+		close(terminated)
 
 	case err = <-connectionTerminated:
 		logger.Printf("Fatal error from connection goroutine: %v.\n", err)
 		terminated <- err
+		close(terminated)
 	}
 
 }
 
-func (local *LocalNode) runConnection(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) runConnection(terminate <-chan bool, terminated chan<- error) {
 	for {
 		local.pingRandomNode()
 		local.requestMoreNodes()
 
-		info := NodeInfoForLocalNodeForNow(local)
+		info := (&localNodeClient{openNode: local}).ConnectionInfo()
 
-		logger.Printf("LocalNode running with %v good nodes (%v unknown and %v bad).\n",
+		logger.Printf("localNode running with %v good nodes (%v unknown and %v bad).\n",
 			info.GoodNodes, info.UnknownNodes, info.BadNodes)
 
 		time.Sleep(15 * time.Second)
@@ -164,6 +179,7 @@ func (local *LocalNode) runConnection(terminate <-chan bool, terminated chan<- e
 		select {
 		case _ = <-terminate:
 			terminated <- nil
+			close(terminated)
 			break
 		default:
 		}
@@ -171,10 +187,10 @@ func (local *LocalNode) runConnection(terminate <-chan bool, terminated chan<- e
 }
 
 /*
-DHT: LocalNode running with 16 good remote nodes (123 unknown and 0 bad).
+DHT: localNode running with 16 good remote nodes (123 unknown and 0 bad).
 */
 
-func (local *LocalNode) pingRandomNode() {
+func (local *localNode) pingRandomNode() {
 	var randNode *RemoteNode
 	randNodeOffset := weakrand.Intn(len(local.Nodes))
 	i := 0
@@ -195,6 +211,7 @@ func (local *LocalNode) pingRandomNode() {
 	go func() {
 		time.Sleep(10 * time.Second)
 		timeoutChan <- errors.New("ping timed out")
+		close(timeoutChan)
 	}()
 
 	select {
@@ -209,7 +226,7 @@ func (local *LocalNode) pingRandomNode() {
 	}
 }
 
-func (local *LocalNode) requestMoreNodes() {
+func (local *localNode) requestMoreNodes() {
 	var randNode *RemoteNode
 	randNodeOffset := weakrand.Intn(len(local.Nodes))
 	i := 0
@@ -222,7 +239,7 @@ func (local *LocalNode) requestMoreNodes() {
 		i++
 	}
 
-	target := GenerateWeakNodeId()
+	target := torrent.WeakRandomBTID()
 
 	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
 
@@ -232,6 +249,7 @@ func (local *LocalNode) requestMoreNodes() {
 	go func() {
 		time.Sleep(10 * time.Second)
 		timeoutChan <- errors.New("find nodes timed out")
+		close(timeoutChan)
 	}()
 
 	select {
