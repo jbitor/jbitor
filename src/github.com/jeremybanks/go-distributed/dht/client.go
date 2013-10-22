@@ -5,6 +5,7 @@ import (
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/torrent"
 	"io/ioutil"
+	weakrand "math/rand"
 	"os"
 	"syscall"
 	"time"
@@ -46,9 +47,10 @@ localNodeClient implements the Client interface for this package.
 type localNodeClient struct {
 	// The localNode instance being used by this client.
 	// This will be nil if the client is not open.
-	openNode *localNode
+	*localNode
 
-	terminateOpenNode chan<- bool
+	// The termination signal channel for the localNode.
+	terminateLocalNode chan<- bool
 
 	// The data file we read/write the node state from/to.
 	openDataFile *os.File
@@ -66,38 +68,45 @@ Existing state will be loaded if it exists, otherwise a new client will
 be generated using a node a randomly-selected ID and port.
 
 A filesystem lock will be used to ensure that only one Client may be open with
-a given path at a time.
+a given path at a time. The blocking parameter determines whether we block or
+return an error when another Client is using the path.
 */
-func OpenClient(path string) (c Client, err error) {
+func OpenClient(path string, blocking bool) (c Client, err error) {
 	var (
 		openDataFile   *os.File
 		nodeData       []byte
 		nodeDict       bencoding.Bencodable
 		nodeDictAsDict bencoding.Dict
 		ok             bool
-		local          *localNodeClient
+		lc             *localNodeClient
 	)
 
-	local = new(localNodeClient)
+	lc = new(localNodeClient)
 
 	openDataFile, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return
 	}
-	local.openDataFile = openDataFile
+	lc.openDataFile = openDataFile
 
-	err = syscall.Flock(int(openDataFile.Fd()), syscall.LOCK_EX) // block for exclusive lock of file
+	flockMode := syscall.LOCK_EX
+
+	if !blocking {
+		flockMode |= syscall.LOCK_NB
+	}
+
+	err = syscall.Flock(int(openDataFile.Fd()), flockMode)
 	if err != nil {
 		return
 	}
 
-	nodeData, err = ioutil.ReadAll(local.openDataFile)
+	nodeData, err = ioutil.ReadAll(lc.openDataFile)
 	if err != nil {
 		logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
-		local.openNode = newLocalNode()
+		lc.localNode = newLocalNode()
 	} else if len(nodeData) == 0 {
 		logger.Printf("Existing DHT node file was empty. Creating a new one.\n")
-		local.openNode = newLocalNode()
+		lc.localNode = newLocalNode()
 	} else {
 		nodeDict, err = bencoding.Decode(nodeData)
 		if err != nil {
@@ -113,19 +122,22 @@ func OpenClient(path string) (c Client, err error) {
 			return
 		}
 
-		local.openNode = localNodeFromBencodingDict(nodeDictAsDict)
+		lc.localNode = localNodeFromBencodingDict(nodeDictAsDict)
 		logger.Printf("Loaded local node info from %v.\n", path)
 	}
 
-	terminateOpenNode := make(chan bool)
-	local.terminateOpenNode = terminateOpenNode
+	terminateLocalNode := make(chan bool)
+	lc.terminateLocalNode = terminateLocalNode
 
-	c = Client(local)
+	c = Client(lc)
 
-	go local.openNode.Run(terminateOpenNode)
+	err = lc.Run(terminateLocalNode)
+	if err {
+		return
+	}
 
 	go func() {
-		for local.openNode != nil {
+		for lc.localNode != nil {
 			c.Save()
 			time.Sleep(15 * time.Second)
 		}
@@ -135,7 +147,7 @@ func OpenClient(path string) (c Client, err error) {
 }
 
 func (c *localNodeClient) Close() (err error) {
-	if c.openNode == nil {
+	if c.localNode == nil {
 		return errors.New("dht.Client is not open.")
 	}
 
@@ -144,8 +156,8 @@ func (c *localNodeClient) Close() (err error) {
 	_ = c.openDataFile.Close()
 	c.openDataFile = nil
 
-	_ = c.openNode.Connection.Close()
-	c.openNode = nil
+	_ = c.localNode.Connection.Close()
+	c.localNode = nil
 
 	return
 }
@@ -155,12 +167,12 @@ func (c *localNodeClient) Save() (err error) {
 		nodeData []byte
 	)
 
-	if c.openNode == nil {
+	if c.localNode == nil {
 		err = errors.New("Client is closed.")
 		return
 	}
 
-	nodeData, err = bencoding.Encode(c.openNode)
+	nodeData, err = bencoding.Encode(c.localNode)
 	if err != nil {
 		return
 	}
@@ -196,7 +208,7 @@ func (c *localNodeClient) AnnouncePeer(local *torrent.LocalPeer, infoHash torren
 func (c *localNodeClient) ConnectionInfo() ConnectionInfo {
 	info := ConnectionInfo{GoodNodes: 0, UnknownNodes: 0, BadNodes: 0}
 
-	for _, node := range c.openNode.Nodes {
+	for _, node := range c.localNode.Nodes {
 		switch node.Status() {
 		case STATUS_UNKNOWN:
 			info.UnknownNodes++
@@ -208,4 +220,121 @@ func (c *localNodeClient) ConnectionInfo() ConnectionInfo {
 	}
 
 	return info
+}
+
+func (c *localNodeClient) Run(terminate <-chan bool) (err error) {
+	terminateLocalNode := make(chan bool)
+	terminateNodeListMaintenance := make(chan bool)
+
+	err = c.localNode.Run(terminateLocalNode)
+	if err != nil {
+		return
+	}
+
+	go func() {
+		c.nodeListMaintenanceLoop(terminateNodeListMaintenance)
+	}()
+
+	go func() {
+		<-terminate
+		close(terminateLocalNode)
+		close(terminateNodeListMaintenance)
+	}()
+
+	return
+}
+
+func (c *localNodeClient) nodeListMaintenanceLoop(terminate <-chan bool) {
+	for {
+		c.pingRandomNode()
+		c.requestMoreNodes()
+
+		info := c.ConnectionInfo()
+
+		logger.Printf("localNode running with %v good nodes (%v unknown and %v bad).\n",
+			info.GoodNodes, info.UnknownNodes, info.BadNodes)
+
+		time.Sleep(15 * time.Second)
+
+		select {
+		case _ = <-terminate:
+			break
+		default:
+		}
+	}
+}
+
+func (local *localNode) pingRandomNode() {
+	var randNode *RemoteNode
+	randNodeOffset := weakrand.Intn(len(local.Nodes))
+	i := 0
+
+	for _, node := range local.Nodes {
+		if i == randNodeOffset {
+			randNode = node
+			break
+		}
+		i++
+	}
+
+	logger.Printf("Pinging a random node: %v.\n", randNode)
+
+	resultChan, errChan := local.Ping(randNode)
+
+	timeoutChan := make(chan error)
+	go func() {
+		time.Sleep(10 * time.Second)
+		timeoutChan <- errors.New("ping timed out")
+		close(timeoutChan)
+	}()
+
+	select {
+	case _ = <-resultChan:
+		logger.Printf("Successfully pinged %v.\n", randNode)
+
+	case err := <-errChan:
+		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+
+	case err := <-timeoutChan:
+		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+	}
+}
+
+// Make this a client method, and add a saving loop to it.
+func (local *localNode) requestMoreNodes() {
+	var randNode *RemoteNode
+	randNodeOffset := weakrand.Intn(len(local.Nodes))
+	i := 0
+
+	for _, node := range local.Nodes {
+		if i == randNodeOffset {
+			randNode = node
+			break
+		}
+		i++
+	}
+
+	target := torrent.WeakRandomBTID()
+
+	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
+
+	resultChan, errChan := local.FindNode(randNode, target)
+
+	timeoutChan := make(chan error)
+	go func() {
+		time.Sleep(10 * time.Second)
+		timeoutChan <- errors.New("find nodes timed out")
+		close(timeoutChan)
+	}()
+
+	select {
+	case _ = <-resultChan:
+		logger.Printf("Successfully find nodes from %v.\n", randNode)
+
+	case err := <-errChan:
+		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
+
+	case err := <-timeoutChan:
+		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
+	}
 }

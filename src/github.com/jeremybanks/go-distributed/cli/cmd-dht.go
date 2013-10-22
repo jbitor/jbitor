@@ -35,7 +35,7 @@ func cmdDhtConnect(args []string) {
 	}
 
 	path := args[0]
-	client, err := dht.OpenClient(path)
+	client, err := dht.OpenClient(path, false)
 	if err != nil {
 		logger.Fatalf("Unable to open client: %v\n", err)
 		return
@@ -61,7 +61,7 @@ func cmdDhtGetPeers(args []string) {
 		return
 	}
 
-	dhtClient, err := dht.OpenClient(".dht-peer")
+	dhtClient, err := dht.OpenClient(".dht-peer", true)
 	if err != nil {
 		logger.Fatalf("Unable to open .dht-peer: %v\n", err)
 		return

@@ -1,14 +1,12 @@
 package dht
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/torrent"
 	"io"
 	weakrand "math/rand"
 	"net"
-	"time"
 )
 
 /*
@@ -121,14 +119,14 @@ func (local *localNode) ToJsonable() (interface{}, error) {
 // Running
 
 func (local *localNode) Run(terminate <-chan bool) (err error) {
+	var conn *net.UDPConn
 	// Main loop for LocalPeer's activity.
 	// (Listening to replies and requests.)
 
-	conn, err := net.ListenUDP("udp4", &net.UDPAddr{
+	conn, err = net.ListenUDP("udp4", &net.UDPAddr{
 		IP:   net.IPv4(0, 0, 0, 0),
 		Port: local.Port,
 	})
-	defer conn.Close()
 	if err != nil {
 		return
 	}
@@ -136,115 +134,17 @@ func (local *localNode) Run(terminate <-chan bool) (err error) {
 	local.Connection = conn
 
 	rpcTerminate := make(chan bool)
-	go func() { local.runRpcListen(rpcTerminate) }()
+	go func() {
+		local.rpcListenLoop(rpcTerminate)
+	}()
 
-	connectionTerminate := make(chan bool)
-	go func() { local.runConnection(connectionTerminate) }()
+	go func() {
+		<-terminate
 
-	select {
-	case _ = <-terminate:
-		// terminate sub-goroutines
-		rpcTerminate <- true
 		close(rpcTerminate)
-	}
+		conn.Close()
+
+	}()
+
 	return
-}
-
-func (local *localNode) runConnection(terminate <-chan bool) {
-	for {
-		local.pingRandomNode()
-		local.requestMoreNodes()
-
-		info := (&localNodeClient{openNode: local}).ConnectionInfo()
-
-		logger.Printf("localNode running with %v good nodes (%v unknown and %v bad).\n",
-			info.GoodNodes, info.UnknownNodes, info.BadNodes)
-
-		time.Sleep(15 * time.Second)
-
-		select {
-		case _ = <-terminate:
-			break
-		default:
-		}
-	}
-}
-
-/*
-DHT: localNode running with 16 good remote nodes (123 unknown and 0 bad).
-*/
-
-func (local *localNode) pingRandomNode() {
-	var randNode *RemoteNode
-	randNodeOffset := weakrand.Intn(len(local.Nodes))
-	i := 0
-
-	for _, node := range local.Nodes {
-		if i == randNodeOffset {
-			randNode = node
-			break
-		}
-		i++
-	}
-
-	logger.Printf("Pinging a random node: %v.\n", randNode)
-
-	resultChan, errChan := local.Ping(randNode)
-
-	timeoutChan := make(chan error)
-	go func() {
-		time.Sleep(10 * time.Second)
-		timeoutChan <- errors.New("ping timed out")
-		close(timeoutChan)
-	}()
-
-	select {
-	case _ = <-resultChan:
-		logger.Printf("Successfully pinged %v.\n", randNode)
-
-	case err := <-errChan:
-		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
-
-	case err := <-timeoutChan:
-		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
-	}
-}
-
-// Make this a client method, and add a saving loop to it.
-func (local *localNode) requestMoreNodes() {
-	var randNode *RemoteNode
-	randNodeOffset := weakrand.Intn(len(local.Nodes))
-	i := 0
-
-	for _, node := range local.Nodes {
-		if i == randNodeOffset {
-			randNode = node
-			break
-		}
-		i++
-	}
-
-	target := torrent.WeakRandomBTID()
-
-	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
-
-	resultChan, errChan := local.FindNode(randNode, target)
-
-	timeoutChan := make(chan error)
-	go func() {
-		time.Sleep(10 * time.Second)
-		timeoutChan <- errors.New("find nodes timed out")
-		close(timeoutChan)
-	}()
-
-	select {
-	case _ = <-resultChan:
-		logger.Printf("Successfully find nodes from %v.\n", randNode)
-
-	case err := <-errChan:
-		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
-
-	case err := <-timeoutChan:
-		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
-	}
 }
