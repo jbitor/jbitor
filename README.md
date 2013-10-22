@@ -3,9 +3,20 @@
 web: https://github.com/jeremybanks/go-distributed  
 git: https://github.com/jeremybanks/go-distributed.git
 
+<a href="https://travis-ci.org/jeremybanks/go-distributed">
+<img src="https://travis-ci.org/jeremybanks/go-distributed.png?branch=master"
+     alt="master branch build status on Travis CI" />
+</a>
+
 ---
 
 ### Implemented Functionality
+
+#### `./distributedgtk`
+
+A GTK GUI which:
+
+- displays the DHT connection state.
 
 #### `./distributed torrent create TARGET > TARGET.torrent`
 
@@ -15,7 +26,7 @@ Generates a torrent file for the target file or directory. The piece size is cur
 
 Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated. State will be persisted in a bencoded file at the specified path. This will maintain a large list of healthy nodes, bootstrapped from the common bootstrap nodes.
 
-#### `./distributed dht get-peers INFOHASH`
+#### `./distributed dht get-peers INFOHASH` (implemented? that's a lie!)
 
 Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
 
