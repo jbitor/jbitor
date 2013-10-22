@@ -28,6 +28,11 @@ bin/distributed:
 	#
 
 bin/distributedgtk:
+    ### Formatting Packages...
+    #
+	go fmt github.com/jeremybanks/go-distributed/gui
+	go fmt github.com/jeremybanks/go-distributed/gui/distributedgtk
+	#
     ### Installing Packages...
     #
 	go install github.com/mattn/go-gtk/gtk

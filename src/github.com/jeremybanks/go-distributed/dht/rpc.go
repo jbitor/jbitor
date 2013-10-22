@@ -285,12 +285,15 @@ func (local *localNode) rpcListenLoop(terminate <-chan bool) {
 
 		transactionId := string(resultD["t"].(bencoding.String))
 
-		query := local.OutstandingQueries[transactionId]
+		query, ok := local.OutstandingQueries[transactionId]
+		if !ok {
+			logger.Printf("Ignoring query response with unexpected token.\n")
+			continue
+		}
 
 		query.Remote.LastResponseFrom = time.Now()
 
 		resultBody, ok := resultD["r"].(bencoding.Dict)
-
 		if !ok {
 			logger.Printf("Ignoring response with non-dict contents.\n")
 			continue

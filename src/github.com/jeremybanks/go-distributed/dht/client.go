@@ -132,7 +132,7 @@ func OpenClient(path string, blocking bool) (c Client, err error) {
 	c = Client(lc)
 
 	err = lc.Run(terminateLocalNode)
-	if err {
+	if err != nil {
 		return
 	}
 
