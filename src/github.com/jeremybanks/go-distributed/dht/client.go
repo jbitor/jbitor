@@ -2,7 +2,11 @@ package dht
 
 import (
 	"errors"
+	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/torrent"
+	"io/ioutil"
+	"os"
+	"syscall"
 	"time"
 )
 
@@ -44,8 +48,10 @@ type localNodeClient struct {
 	// This will be nil if the client is not open.
 	openNode *localNode
 
-	// Sending any value into this chanel will terminate the client's activity.
-	terminate chan<- bool
+	terminateOpenNode chan<- bool
+
+	// The data file we read/write the node state from/to.
+	openDataFile *os.File
 
 	// A single value will be sent into this chanel when the client is
 	// terminated. If the value is not nil, it will be a fatal error that
@@ -63,18 +69,68 @@ A filesystem lock will be used to ensure that only one Client may be open with
 a given path at a time.
 */
 func OpenClient(path string) (c Client, err error) {
-	// TODO: use an exclusive open to lock path + ".lock"
-	local := new(localNodeClient)
+	var (
+		openDataFile   *os.File
+		nodeData       []byte
+		nodeDict       bencoding.Bencodable
+		nodeDictAsDict bencoding.Dict
+		ok             bool
+		local          *localNodeClient
+	)
 
-	terminate := make(chan bool)
+	local = new(localNodeClient)
 
-	local.terminate = terminate
+	openDataFile, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return
+	}
+	local.openDataFile = openDataFile
 
-	go func() {
+	err = syscall.Flock(int(openDataFile.Fd()), syscall.LOCK_EX) // block for exclusive lock of file
+	if err != nil {
+		return
+	}
 
-	}()
+	nodeData, err = ioutil.ReadAll(local.openDataFile)
+	if err != nil {
+		logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
+		local.openNode = newLocalNode()
+	} else if len(nodeData) == 0 {
+		logger.Printf("Existing DHT node file was empty. Creating a new one.\n")
+		local.openNode = newLocalNode()
+	} else {
+		nodeDict, err = bencoding.Decode(nodeData)
+		if err != nil {
+			openDataFile.Close()
+			return
+		}
+
+		nodeDictAsDict, ok = nodeDict.(bencoding.Dict)
+		if !ok {
+			err = errors.New("Node data wasn't a dict.")
+			logger.Printf("%v\n", err)
+			openDataFile.Close()
+			return
+		}
+
+		local.openNode = localNodeFromBencodingDict(nodeDictAsDict)
+		logger.Printf("Loaded local node info from %v.\n", path)
+	}
+
+	terminateOpenNode := make(chan bool)
+	local.terminateOpenNode = terminateOpenNode
 
 	c = Client(local)
+
+	go local.openNode.Run(terminateOpenNode)
+
+	go func() {
+		for local.openNode != nil {
+			c.Save()
+			time.Sleep(15 * time.Second)
+		}
+	}()
+
 	return
 }
 
@@ -83,13 +139,50 @@ func (c *localNodeClient) Close() (err error) {
 		return errors.New("dht.Client is not open.")
 	}
 
-	close(c.terminate)
+	err = c.Save()
+
+	_ = c.openDataFile.Close()
+	c.openDataFile = nil
+
+	_ = c.openNode.Connection.Close()
 	c.openNode = nil
+
 	return
 }
 
 func (c *localNodeClient) Save() (err error) {
-	panic("Save not implemented")
+	var (
+		nodeData []byte
+	)
+
+	if c.openNode == nil {
+		err = errors.New("Client is closed.")
+		return
+	}
+
+	nodeData, err = bencoding.Encode(c.openNode)
+	if err != nil {
+		return
+	}
+
+	err = c.openDataFile.Truncate(0)
+	if err != nil {
+		return
+	}
+
+	_, err = c.openDataFile.WriteAt(nodeData, 0)
+	if err != nil {
+		return
+	}
+
+	err = c.openDataFile.Sync()
+	if err != nil {
+		return
+	}
+
+	logger.Printf("Saved DHT client state.\n")
+
+	return
 }
 
 func (c *localNodeClient) GetPeers(infoHash torrent.BTID) (peers []*torrent.RemotePeer, err error) {

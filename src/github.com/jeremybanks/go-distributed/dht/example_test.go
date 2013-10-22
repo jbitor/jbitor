@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jeremybanks/go-distributed/dht"
 	"github.com/jeremybanks/go-distributed/torrent"
+	"testing"
 )
 
 // Attempts to find peers for an Ubuntu Torrent.
@@ -25,4 +26,9 @@ func ExampleClient() {
 	}
 
 	fmt.Printf("Found peers: %v.\n", peers)
+}
+
+func TestExamples(t *testing.T) {
+	t.Skip("the examples don't actually work yet")
+	ExampleClient()
 }

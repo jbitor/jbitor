@@ -254,7 +254,7 @@ func (local *localNode) AnnouncePeer(remote *RemoteNode, id torrent.BTID) (resul
 	return
 }
 
-func (local *localNode) runRpcListen(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) runRpcListen(terminate <-chan bool) {
 	response := new([1024]byte)
 
 	for {

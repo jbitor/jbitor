@@ -36,6 +36,11 @@ func newLocalNode() (local *localNode) {
 	local.Port = 1024 + weakrand.Intn(8192)
 	local.OutstandingQueries = make(map[string]*outstandingQuery)
 	local.Nodes = map[string]*RemoteNode{}
+
+	for _, node := range bootstrapNodes {
+		local.AddOrGetRemoteNode(&node)
+	}
+
 	return local
 }
 
@@ -115,7 +120,7 @@ func (local *localNode) ToJsonable() (interface{}, error) {
 
 // Running
 
-func (local *localNode) Run(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) Run(terminate <-chan bool) (err error) {
 	// Main loop for LocalPeer's activity.
 	// (Listening to replies and requests.)
 
@@ -124,47 +129,28 @@ func (local *localNode) Run(terminate <-chan bool, terminated chan<- error) {
 		Port: local.Port,
 	})
 	defer conn.Close()
-
 	if err != nil {
-		terminated <- err
-		close(terminated)
 		return
 	}
 
 	local.Connection = conn
 
-	rpcTerminated := make(chan error)
 	rpcTerminate := make(chan bool)
-	go func() { local.runRpcListen(rpcTerminate, rpcTerminated) }()
+	go func() { local.runRpcListen(rpcTerminate) }()
 
-	connectionTerminated := make(chan error)
 	connectionTerminate := make(chan bool)
-	go func() { local.runConnection(connectionTerminate, connectionTerminated) }()
+	go func() { local.runConnection(connectionTerminate) }()
 
 	select {
 	case _ = <-terminate:
 		// terminate sub-goroutines
 		rpcTerminate <- true
 		close(rpcTerminate)
-
-		// notify caller of non-error termination
-		terminated <- nil
-		close(terminated)
-
-	case err = <-rpcTerminated:
-		logger.Printf("Fatal error from RPC goroutine: %v.\n", err)
-		terminated <- err
-		close(terminated)
-
-	case err = <-connectionTerminated:
-		logger.Printf("Fatal error from connection goroutine: %v.\n", err)
-		terminated <- err
-		close(terminated)
 	}
-
+	return
 }
 
-func (local *localNode) runConnection(terminate <-chan bool, terminated chan<- error) {
+func (local *localNode) runConnection(terminate <-chan bool) {
 	for {
 		local.pingRandomNode()
 		local.requestMoreNodes()
@@ -178,8 +164,6 @@ func (local *localNode) runConnection(terminate <-chan bool, terminated chan<- e
 
 		select {
 		case _ = <-terminate:
-			terminated <- nil
-			close(terminated)
 			break
 		default:
 		}
@@ -226,6 +210,7 @@ func (local *localNode) pingRandomNode() {
 	}
 }
 
+// Make this a client method, and add a saving loop to it.
 func (local *localNode) requestMoreNodes() {
 	var randNode *RemoteNode
 	randNodeOffset := weakrand.Intn(len(local.Nodes))
