@@ -32,6 +32,7 @@ Use `./doc` to run `godoc` and open a browser pointing at `go-distributed`.
 For the GUI you may need to install something like:
 
     PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig brew install gtk+
+    PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig go get github.com/mattn/go-gtk/gtk
 
 ---
 

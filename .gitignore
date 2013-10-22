@@ -2,3 +2,7 @@
 .idea/
 *.iml
 
+# Used for ad-hoc temporary files that I was to ignore.
+*.ign
+*.ign.*
+

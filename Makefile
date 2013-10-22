@@ -27,11 +27,16 @@ bin/distributed:
 	go test -run=. -bench=NONE github.com/jeremybanks/go-distributed/cli/distributed
 	#
 
-hello: bin/distributed PHONY
-	@bin/distributed torrent make test-torrents/hello/ > test-torrents/hello.torrent
-	@echo
-	@bin/distributed dht helloworld tmp/dht-node.benc
-	@echo
-	@bin/distributed json from-bencoding < tmp/dht-node.benc | python -m json.tool > tmp/dht-node.json
+bin/distributedgtk:
+    ### Installing Packages...
+    #
+	go install github.com/mattn/go-gtk/gtk
+	go install github.com/jeremybanks/go-distributed/gui
+	go install github.com/jeremybanks/go-distributed/gui/distributedgtk
+	#
+	### Testing...
+	go test github.com/jeremybanks/go-distributed/gui
+	go test github.com/jeremybanks/go-distributed/gui/distributedgtk
+	#
 
 PHONY:
