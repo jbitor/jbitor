@@ -30,18 +30,18 @@ bin/distributed:
 bin/distributedgtk:
     ### Formatting Packages...
     #
-	go fmt github.com/jeremybanks/go-distributed/gui
-	go fmt github.com/jeremybanks/go-distributed/gui/distributedgtk
+	go fmt github.com/jeremybanks/go-distributed/gtkgui
+	go fmt github.com/jeremybanks/go-distributed/gtkgui/distributedgtk
 	#
     ### Installing Packages...
     #
 	go install github.com/mattn/go-gtk/gtk
-	go install github.com/jeremybanks/go-distributed/gui
-	go install github.com/jeremybanks/go-distributed/gui/distributedgtk
+	go install github.com/jeremybanks/go-distributed/gtkgui
+	go install github.com/jeremybanks/go-distributed/gtkgui/distributedgtk
 	#
 	### Testing...
-	go test github.com/jeremybanks/go-distributed/gui
-	go test github.com/jeremybanks/go-distributed/gui/distributedgtk
+	go test github.com/jeremybanks/go-distributed/gtkgui
+	go test github.com/jeremybanks/go-distributed/gtkgui/distributedgtk
 	#
 
 PHONY:
