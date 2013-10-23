@@ -1,4 +1,4 @@
-package torrentutils
+package utils
 
 import (
 	"errors"

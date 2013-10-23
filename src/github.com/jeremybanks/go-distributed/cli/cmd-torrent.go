@@ -4,7 +4,7 @@ import (
 	"crypto/sha1"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"github.com/jeremybanks/go-distributed/torrent"
-	"github.com/jeremybanks/go-distributed/torrentutils"
+	"github.com/jeremybanks/go-distributed/utils"
 	"os"
 )
 
@@ -34,7 +34,7 @@ func cmdTorrentMake(args []string) {
 
 	path := args[0]
 
-	infoDict, err := torrentutils.GenerateTorrentMetaInfo(torrentutils.CreationOptions{
+	infoDict, err := utils.GenerateTorrentMetaInfo(utils.CreationOptions{
 		Path:           path,
 		PieceLength:    32768,
 		ForceMultiFile: false,
