@@ -3,7 +3,7 @@
 web: https://github.com/jeremybanks/go-distributed  
 git: https://github.com/jeremybanks/go-distributed.git
 
-<a href="https://travis-ci.org/jeremybanks/go-distributed">
+<a href="https://travis-ci.org/jeremybanks/go-distributed/branches">
 <img src="https://travis-ci.org/jeremybanks/go-distributed.png?branch=master"
      alt="master branch build status on Travis CI" />
 </a>

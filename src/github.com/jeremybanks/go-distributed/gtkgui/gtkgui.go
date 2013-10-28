@@ -11,12 +11,18 @@ import (
 
 const targetNoteCount = 32
 
+func init() {
+	if os.Getenv("HOME") == "" {
+		logger.Fatal("HOME not set\n")
+		return
+	}
+}
+
 func Main() {
 	gtk.Init(nil)
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	window.SetTitle("Distributed-GTK")
 
-	// XXX: We should probably confirm that $HOME is not empty.
 	dhtClientStatePath := os.Getenv("HOME") + "/.distributed-dht.benc"
 	dhtClient, err := dht.OpenClient(dhtClientStatePath, false)
 
@@ -27,12 +33,10 @@ func Main() {
 	notebook := gtk.NewNotebook()
 	window.Add(notebook)
 
-	dhtPage := MakeDhtVBox(dhtClient)
-	torrentPage := MakeTorrentVBox()
+	notebook.AppendPage(MakeDhtVBox(dhtClient), gtk.NewLabel("DHT"))
 
-	notebook.AppendPage(dhtPage, gtk.NewLabel("DHT"))
 
-	notebook.AppendPage(torrentPage, gtk.NewLabel("Torrent"))
+	notebook.AppendPage(MakeTorrentVBox(), gtk.NewLabel("Torrent"))
 
 	window.Connect("destroy", func() {
 		dhtClient.Save()
