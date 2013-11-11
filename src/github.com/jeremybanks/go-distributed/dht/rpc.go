@@ -182,7 +182,7 @@ func (local *localNode) FindNode(remote *RemoteNode, id torrent.BTID) (<-chan []
 	return findResult, findErr
 }
 
-func (local *localNode) GetPeers(remote *RemoteNode, infoHash string) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
+func (local *localNode) GetPeers(remote *RemoteNode, infoHash torrent.BTID) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
 	peersResult := make(chan []*torrent.RemotePeer)
 	nodesResult := make(chan []*RemoteNode)
 	getPeersErr := make(chan error)

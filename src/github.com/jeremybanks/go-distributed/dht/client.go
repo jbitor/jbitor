@@ -197,12 +197,32 @@ func (c *localNodeClient) Save() (err error) {
 	return
 }
 
-func (c *localNodeClient) GetPeers(infoHash torrent.BTID) (peers []*torrent.RemotePeer, err error) {
-	nodes := c.localNode.NodesByCloseness(infoHash, false)
+func (c *localNodeClient) GetPeers(target torrent.BTID) (peers []*torrent.RemotePeer, err error) {
+	// XXX: should retain a list of all nodes already queried in this request
 
-	logger.Printf("Closest nodes: %s\n", nodes)
+	for {
+		time.Sleep(5 * time.Second)
 
-	panic("GetPeers not implemented")
+		nodes := c.localNode.NodesByCloseness(target, false)
+		logger.Printf("Request peers from %v nodes closest to %v.\n", len(nodes), target)
+
+		// request
+		for _, remote := range nodes[:5] {
+			// todo: concurrent requests?
+			peersResult, nodesResult, errorResult := c.localNode.GetPeers(remote, target)
+
+			select {
+			case peers := <-peersResult:
+				return peers, nil
+			case _ = <-nodesResult:
+				// nothing to do -- nodes will already have been recorded
+			case err := <-errorResult:
+				logger.Printf("Error response to GetPeers: %v\n", err)
+			}
+		}
+
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func (c *localNodeClient) AnnouncePeer(local *torrent.LocalPeer, infoHash torrent.BTID) (err error) {

@@ -92,7 +92,8 @@ func (remote *RemoteNode) String() string {
 		typeSuffix = ""
 	}
 
-	return fmt.Sprintf("<RemoteNode%s %v (%v) at %v>", typeSuffix, remote.Id, remote.Status(), remote.Address)
+	return fmt.Sprintf("<RemoteNode%s %v (%v) at %v:%v>",
+		typeSuffix, remote.Id, remote.Status(), remote.Address.IP, remote.Address.Port)
 }
 
 func (remote *RemoteNode) Status() RemoteNodeStatus {

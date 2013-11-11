@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jeremybanks/go-distributed/bencoding"
 	"net"
 )
@@ -12,6 +13,11 @@ type RemotePeer struct {
 
 type LocalPeer struct {
 	Port int
+}
+
+func (remote *RemotePeer) String() string {
+	return fmt.Sprintf("<RemotePeer at %v:%v>",
+		remote.Address.IP, remote.Address.Port)
 }
 
 // Decodes a compact peer address from a 6-byte bencoding.String to a net.TCPAddr.
