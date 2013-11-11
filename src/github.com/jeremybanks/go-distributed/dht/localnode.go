@@ -23,6 +23,8 @@ type localNode struct {
 	OutstandingQueries map[string]*outstandingQuery
 }
 
+type RemoteList []*RemoteNode
+
 func newLocalNode() (local *localNode) {
 	id, err := torrent.SecureRandomBTID()
 	if err != nil {
@@ -36,7 +38,7 @@ func newLocalNode() (local *localNode) {
 	local.OutstandingQueries = make(map[string]*outstandingQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
-	for _, node := range bootstrapNodes {
+	for _, node := range defaultNodes {
 		local.AddOrGetRemoteNode(&node)
 	}
 
@@ -59,13 +61,13 @@ func (local *localNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 
 }
 
-type nodeOrderingByNearness struct {
+type nodeOrderingByCloseness struct {
 	target    torrent.BTID
 	nodes     []*RemoteNode
 	distances [][5]uint32
 }
 
-func (local *localNode) nodeOrderingByNearnessFromTarget(target torrent.BTID) (ordering nodeOrderingByNearness) {
+func (local *localNode) nodeOrderingByClosenessFromTarget(target torrent.BTID) (ordering nodeOrderingByCloseness) {
 	ordering.target = target
 	ordering.nodes = make([]*RemoteNode, len(local.Nodes))
 	ordering.distances = make([][5]uint32, len(local.Nodes))
@@ -73,18 +75,18 @@ func (local *localNode) nodeOrderingByNearnessFromTarget(target torrent.BTID) (o
 	i := 0
 	for _, remoteNode := range local.Nodes {
 		ordering.nodes[i] = remoteNode
-		ordering.distances[i] = local.Id.XoredUint32s(remoteNode.Id)
+		ordering.distances[i] = local.Id.XoredUint32s(target)
 		i++
 	}
 
 	return ordering
 }
 
-func (ordering nodeOrderingByNearness) Len() int {
+func (ordering nodeOrderingByCloseness) Len() int {
 	return len(ordering.nodes)
 }
 
-func (ordering nodeOrderingByNearness) Swap(i, j int) {
+func (ordering nodeOrderingByCloseness) Swap(i, j int) {
 	tmpNode, tmpDistance := ordering.nodes[i], ordering.distances[i]
 	ordering.nodes[i] = ordering.nodes[j]
 	ordering.distances[i] = ordering.distances[j]
@@ -92,19 +94,39 @@ func (ordering nodeOrderingByNearness) Swap(i, j int) {
 	ordering.distances[j] = tmpDistance
 }
 
-func (ordering nodeOrderingByNearness) Less(i, j int) bool {
+// Orders .nodes by closeness to .target. Bootstrap nodes sort after non-bootstrap nodes.
+func (ordering nodeOrderingByCloseness) Less(i, j int) bool {
+	iNode, jNode := ordering.nodes[i], ordering.nodes[j]
 	iDist, jDist := ordering.distances[i], ordering.distances[j]
-	return (iDist[0] < jDist[0] || iDist[0] == jDist[0] &&
-		(iDist[1] < jDist[i] || iDist[1] == jDist[1] &&
-			(iDist[2] < jDist[2] || iDist[2] == jDist[2] &&
-				(iDist[3] < jDist[3]))))
+
+	return (!iNode.BootstrapOnly && jNode.BootstrapOnly || iNode.BootstrapOnly == jNode.BootstrapOnly) &&
+		(iDist[0] < jDist[0] || iDist[0] == jDist[0] &&
+			(iDist[1] < jDist[1] || iDist[1] == jDist[1] &&
+				(iDist[2] < jDist[2] || iDist[2] == jDist[2] &&
+					(iDist[3] < jDist[3]))))
 
 }
 
-func (local *localNode) NodesByNearness(target torrent.BTID) []*RemoteNode {
-	ordering := local.nodeOrderingByNearnessFromTarget(target)
+// Returns a slice of known queryable *RemoteNodes.
+// If bootstrap nodes are included, they will sort after *all* non-boostrap
+// nodes.
+func (local *localNode) NodesByCloseness(target torrent.BTID, includeBootstrap bool) (nodes []*RemoteNode) {
+	ordering := local.nodeOrderingByClosenessFromTarget(target)
 	sort.Sort(ordering)
-	return ordering.nodes[:]
+
+	if !includeBootstrap {
+		nodes = make([]*RemoteNode, 0, len(ordering.nodes))
+
+		for _, node := range ordering.nodes {
+			if !node.BootstrapOnly {
+				nodes = append(nodes, node)
+			}
+		}
+	} else {
+		nodes = ordering.nodes[:]
+	}
+
+	return nodes
 }
 
 func (local *localNode) String() string {

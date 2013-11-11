@@ -29,13 +29,12 @@ func cmdDht(args []string) {
 }
 
 func cmdDhtConnect(args []string) {
-	if len(args) != 1 {
-		logger.Fatalf("Usage: %v dht connect PATH.benc\n", os.Args[0])
+	if len(args) != 0 {
+		logger.Fatalf("Usage: %v dht connect.benc\n", os.Args[0])
 		return
 	}
 
-	path := args[0]
-	client, err := dht.OpenClient(path, false)
+	client, err := dht.OpenClient(".dht-peer", false)
 	if err != nil {
 		logger.Fatalf("Unable to open client: %v\n", err)
 		return

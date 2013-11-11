@@ -198,6 +198,10 @@ func (c *localNodeClient) Save() (err error) {
 }
 
 func (c *localNodeClient) GetPeers(infoHash torrent.BTID) (peers []*torrent.RemotePeer, err error) {
+	nodes := c.localNode.NodesByCloseness(infoHash, false)
+
+	logger.Printf("Closest nodes: %s\n", nodes)
+
 	panic("GetPeers not implemented")
 }
 
@@ -246,13 +250,14 @@ func (c *localNodeClient) Run(terminate <-chan bool) (err error) {
 
 func (c *localNodeClient) nodeListMaintenanceLoop(terminate <-chan bool) {
 	for {
-		c.pingRandomNode()
-		c.requestMoreNodes()
 
 		info := c.ConnectionInfo()
 
 		logger.Printf("localNode running with %v good nodes (%v unknown and %v bad).\n",
 			info.GoodNodes, info.UnknownNodes, info.BadNodes)
+
+		c.pingRandomNode()
+		c.requestMoreNodes()
 
 		time.Sleep(15 * time.Second)
 

@@ -5,20 +5,30 @@ package dht
 
 import "net"
 
-var bootstrapNodes = []RemoteNode{
+var defaultNodes = []RemoteNode{
+	// Possible node: hope for another node running locally, on the default port
 	{
 		Address: net.UDPAddr{
 			IP:   net.IPv4(127, 0, 0, 1),
 			Port: 6881,
 		},
 	},
-	// XXX: These should have some flag indicating that they're only for
-	// bootstrapping, to ensure they aren't used for any other purpose
-	// and when there are no other known good nodes.
+
+	// Bootstrap node: router.bittorrent.com
 	{
 		Address: net.UDPAddr{
 			IP:   net.IPv4(67, 215, 242, 139),
 			Port: 6881,
 		},
+		BootstrapOnly: true,
+	},
+
+	// Bootstrap node: dht.transmissionbt.com
+	{
+		Address: net.UDPAddr{
+			IP:   net.IPv4(91, 121, 60, 42),
+			Port: 6881,
+		},
+		BootstrapOnly: true,
 	},
 }

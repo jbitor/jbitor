@@ -19,10 +19,15 @@ type RemoteNode struct {
 
 	ConsecutiveFailedQueries int
 
-	Source *RemoteNode
-	// If specified, identifies the RemoteNode which gave us this Node.
+	// If specified, Source identifies the RemoteNode which gave us this Node.
 	// This could be used to identify a Source which provides us with many
 	// bad nodes.
+	Source *RemoteNode
+
+	// BootstrapOnly indicates that this is a bootstrap node, and should only
+	// be used in order to find nodes when few are known. It should never be
+	// used for queries.
+	BootstrapOnly bool
 }
 
 func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
@@ -47,11 +52,19 @@ func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
 	remote.LastRequestFrom = time.Unix(int64(dict["LastRequestFromSec"].(bencoding.Int)), 0)
 	remote.LastResponseFrom = time.Unix(int64(dict["LastResponseFromSec"].(bencoding.Int)), 0)
 	remote.ConsecutiveFailedQueries = int(dict["ConsecutiveFailedQueries"].(bencoding.Int))
+	remote.BootstrapOnly = 0 != int(dict["BootstrapOnly"].(bencoding.Int))
 
 	return remote
 }
 
 func (remote *RemoteNode) MarshalBencodingDict() (dict bencoding.Dict) {
+	var bootstrapOnly bencoding.Int
+	if remote.BootstrapOnly {
+		bootstrapOnly = 1
+	} else {
+		bootstrapOnly = 0
+	}
+
 	dict = bencoding.Dict{
 		"Id": bencoding.String(remote.Id),
 
@@ -63,13 +76,23 @@ func (remote *RemoteNode) MarshalBencodingDict() (dict bencoding.Dict) {
 		"LastResponseFromSec": bencoding.Int(remote.LastResponseFrom.Unix()),
 
 		"ConsecutiveFailedQueries": bencoding.Int(remote.ConsecutiveFailedQueries),
+
+		"BootstrapOnly": bootstrapOnly,
 	}
 
 	return dict
 }
 
 func (remote *RemoteNode) String() string {
-	return fmt.Sprintf("<RemoteNode %v (%v) at %v>", remote.Id, remote.Status(), remote.Address)
+	var typeSuffix string
+
+	if remote.BootstrapOnly {
+		typeSuffix = " (bootstrap-only)"
+	} else {
+		typeSuffix = ""
+	}
+
+	return fmt.Sprintf("<RemoteNode%s %v (%v) at %v>", typeSuffix, remote.Id, remote.Status(), remote.Address)
 }
 
 func (remote *RemoteNode) Status() RemoteNodeStatus {

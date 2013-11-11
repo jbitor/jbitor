@@ -22,17 +22,17 @@ A GTK GUI which:
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
 
-#### `./distributed dht connect PATH.benc`
+#### `./distributed dht connect`
 
-Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated. State will be persisted in a bencoded file at the specified path. This will maintain a large list of healthy nodes, bootstrapped from the common bootstrap nodes.
+Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
-#### `./distributed dht get-peers INFOHASH` (implemented? that's a lie!)
+#### `./distributed dht get-peers INFOHASH`
 
 Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
 
 #### `./distributed json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
 
-Used to convert between equivalent JSON and Bencoding data. DaFindta that does not have an equivalent representation in the other format will cause an error.
+Used to convert between equivalent JSON and Bencoding data. Data that does not have an equivalent representation in the other format will cause an error.
 
 ---
 

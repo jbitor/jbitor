@@ -6,3 +6,5 @@
 *.ign
 *.ign.*
 
+# DHT state
+.dht-peer
