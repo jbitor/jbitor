@@ -7,6 +7,7 @@ import (
 	"io"
 	weakrand "math/rand"
 	"net"
+	"sort"
 )
 
 /*
@@ -56,6 +57,54 @@ func (local *localNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 
 	return remote
 
+}
+
+type nodeOrderingByNearness struct {
+	target    torrent.BTID
+	nodes     []*RemoteNode
+	distances [][5]uint32
+}
+
+func (local *localNode) nodeOrderingByNearnessFromTarget(target torrent.BTID) (ordering nodeOrderingByNearness) {
+	ordering.target = target
+	ordering.nodes = make([]*RemoteNode, len(local.Nodes))
+	ordering.distances = make([][5]uint32, len(local.Nodes))
+
+	i := 0
+	for _, remoteNode := range local.Nodes {
+		ordering.nodes[i] = remoteNode
+		ordering.distances[i] = local.Id.XoredUint32s(remoteNode.Id)
+		i++
+	}
+
+	return ordering
+}
+
+func (ordering nodeOrderingByNearness) Len() int {
+	return len(ordering.nodes)
+}
+
+func (ordering nodeOrderingByNearness) Swap(i, j int) {
+	tmpNode, tmpDistance := ordering.nodes[i], ordering.distances[i]
+	ordering.nodes[i] = ordering.nodes[j]
+	ordering.distances[i] = ordering.distances[j]
+	ordering.nodes[j] = tmpNode
+	ordering.distances[j] = tmpDistance
+}
+
+func (ordering nodeOrderingByNearness) Less(i, j int) bool {
+	iDist, jDist := ordering.distances[i], ordering.distances[j]
+	return (iDist[0] < jDist[0] || iDist[0] == jDist[0] &&
+		(iDist[1] < jDist[i] || iDist[1] == jDist[1] &&
+			(iDist[2] < jDist[2] || iDist[2] == jDist[2] &&
+				(iDist[3] < jDist[3]))))
+
+}
+
+func (local *localNode) NodesByNearness(target torrent.BTID) []*RemoteNode {
+	ordering := local.nodeOrderingByNearnessFromTarget(target)
+	sort.Sort(ordering)
+	return ordering.nodes[:]
 }
 
 func (local *localNode) String() string {

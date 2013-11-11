@@ -31,6 +31,31 @@ func (id BTID) String() (str string) {
 	}
 }
 
+// Converts the id to a big-endian [5]uint32 value.
+func (id BTID) Uint32s() (result [5]uint32) {
+	var idBytes [20]byte
+	copy([]byte(id), idBytes[:])
+
+	result[0] = uint32(idBytes[0]<<24) + uint32(idBytes[1]<<16) + uint32(idBytes[2]<<8) + uint32(idBytes[3])
+	result[1] = uint32(idBytes[4]<<24) + uint32(idBytes[5]<<16) + uint32(idBytes[6]<<8) + uint32(idBytes[7])
+	result[2] = uint32(idBytes[8]<<24) + uint32(idBytes[9]<<16) + uint32(idBytes[10]<<8) + uint32(idBytes[11])
+	result[3] = uint32(idBytes[12]<<24) + uint32(idBytes[13]<<16) + uint32(idBytes[14]<<8) + uint32(idBytes[15])
+	result[4] = uint32(idBytes[16]<<24) + uint32(idBytes[17]<<16) + uint32(idBytes[18]<<8) + uint32(idBytes[19])
+
+	return result
+}
+
+func (id BTID) XoredUint32s(other BTID) (result [5]uint32) {
+	own := id.Uint32s()
+	others := other.Uint32s()
+
+	for i := 0; i < 5; i++ {
+		result[i] = own[i] ^ others[i]
+	}
+
+	return result
+}
+
 // BTIDFromHex() returns a valid BTID for a given hex string, or an error.
 func BTIDFromHex(hexStr string) (id BTID, err error) {
 	bytes, err := hex.DecodeString(hexStr)
