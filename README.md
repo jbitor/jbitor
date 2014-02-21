@@ -1,10 +1,10 @@
-## go-distributed: peer-to-peer systems in Go
+## jbitor
 
-web: https://github.com/jeremybanks/go-distributed  
-git: https://github.com/jeremybanks/go-distributed.git
+web: https://github.com/jbitor/jbitor
+git: https://github.com/jbitor/jbitor.git
 
-<a href="https://travis-ci.org/jeremybanks/go-distributed/branches">
-<img src="https://travis-ci.org/jeremybanks/go-distributed.png?branch=master"
+<a href="https://travis-ci.org/jbitor/jbitor/branches">
+<img src="https://travis-ci.org/jbitor/jbitor.png?branch=master"
      alt="master branch build status on Travis CI" />
 </a>
 
@@ -12,31 +12,31 @@ git: https://github.com/jeremybanks/go-distributed.git
 
 ### Implemented Functionality
 
-#### `./distributedgtk`
+#### `./jbitorgtk`
 
 A GTK GUI which:
 
 - displays the DHT connection state.
 
-#### `./distributed torrent create TARGET > TARGET.torrent`
+#### `./jbitor torrent create TARGET > TARGET.torrent`
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
 
-#### `./distributed dht connect`
+#### `./jbitor dht connect`
 
 Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
-#### `./distributed dht get-peers INFOHASH`
+#### `./jbitor dht get-peers INFOHASH`
 
 Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
 
-#### `./distributed json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
+#### `./jbitor json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
 
 Used to convert between equivalent JSON and Bencoding data. Data that does not have an equivalent representation in the other format will cause an error.
 
 ---
 
-Use `./doc` to run `godoc` and open a browser pointing at `go-distributed`.
+Use `./doc` to run `godoc` and open a browser pointing at `go-jbitor`.
 
 ---
 

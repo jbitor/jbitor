@@ -1,4 +1,4 @@
-// Package cli provides a command-line interface for functionality in go-distributed.
+// Package cli provides a command-line interface for functionality in go-jbitor.
 package cli
 
 import (

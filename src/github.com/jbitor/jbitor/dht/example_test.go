@@ -2,8 +2,8 @@ package dht_test
 
 import (
 	"fmt"
-	"github.com/jeremybanks/go-distributed/dht"
-	"github.com/jeremybanks/go-distributed/torrent"
+	"github.com/jeremybanks/go-jbitor/dht"
+	"github.com/jeremybanks/go-jbitor/torrent"
 	"testing"
 )
 

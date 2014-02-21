@@ -2,8 +2,8 @@ package dht
 
 import (
 	"errors"
-	"github.com/jeremybanks/go-distributed/bencoding"
-	"github.com/jeremybanks/go-distributed/torrent"
+	"github.com/jeremybanks/go-jbitor/bencoding"
+	"github.com/jeremybanks/go-jbitor/torrent"
 	"io/ioutil"
 	weakrand "math/rand"
 	"os"

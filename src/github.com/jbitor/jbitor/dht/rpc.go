@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/jeremybanks/go-distributed/bencoding"
-	"github.com/jeremybanks/go-distributed/torrent"
+	"github.com/jeremybanks/go-jbitor/bencoding"
+	"github.com/jeremybanks/go-jbitor/torrent"
 	"net"
 	"time"
 )

@@ -2,5 +2,5 @@
 set -e
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
-make --always-make bin/distributed > /dev/null || make --always-make bin/distributed
-bin/distributed $*
+make --always-make bin/jbitor > /dev/null || make --always-make bin/jbitor
+bin/jbitor $*

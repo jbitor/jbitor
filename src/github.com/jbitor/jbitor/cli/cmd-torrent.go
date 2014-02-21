@@ -2,9 +2,9 @@ package cli
 
 import (
 	"crypto/sha1"
-	"github.com/jeremybanks/go-distributed/bencoding"
-	"github.com/jeremybanks/go-distributed/torrent"
-	"github.com/jeremybanks/go-distributed/utils"
+	"github.com/jeremybanks/go-jbitor/bencoding"
+	"github.com/jeremybanks/go-jbitor/torrent"
+	"github.com/jeremybanks/go-jbitor/utils"
 	"os"
 )
 

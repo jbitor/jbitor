@@ -3,5 +3,5 @@ cloc src/github.com/jeremybanks/ | grep "Go" -B 2
 set -e
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
-python -m webbrowser http://localhost:6060/pkg/github.com/jeremybanks/go-distributed/
+python -m webbrowser http://localhost:6060/pkg/github.com/jeremybanks/go-jbitor/
 godoc -http=:6060 -index -play=true -q=true -index_throttle=0.25

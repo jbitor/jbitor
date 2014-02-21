@@ -2,7 +2,7 @@ package gtkgui
 
 import (
 	"fmt"
-	"github.com/jeremybanks/go-distributed/dht"
+	"github.com/jeremybanks/go-jbitor/dht"
 	"github.com/mattn/go-gtk/gtk"
 	"math"
 	"os"
@@ -21,9 +21,9 @@ func init() {
 func Main() {
 	gtk.Init(nil)
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
-	window.SetTitle("Distributed-GTK")
+	window.SetTitle("jBitor-GTK")
 
-	dhtClientStatePath := os.Getenv("HOME") + "/.distributed-dht.benc"
+	dhtClientStatePath := os.Getenv("HOME") + "/.jbitor-dht.benc"
 	dhtClient, err := dht.OpenClient(dhtClientStatePath, false)
 
 	_ = err // XXX

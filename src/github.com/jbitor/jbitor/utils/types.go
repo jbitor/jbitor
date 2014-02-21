@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"github.com/jeremybanks/go-distributed/bencoding"
+	"github.com/jbitor/jbitor/bencoding"
 	"io"
 )
 

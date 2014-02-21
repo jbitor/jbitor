@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jeremybanks/go-distributed/gtkgui"
+	"github.com/jeremybanks/go-jbitor/gtkgui"
 )
 
 func main() {
