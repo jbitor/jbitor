@@ -12,12 +12,6 @@ git: https://github.com/jbitor/jbitor.git
 
 ### Implemented Functionality
 
-#### `./jbitorgtk`
-
-A GTK GUI which:
-
-- displays the DHT connection state.
-
 #### `./jbitor torrent create TARGET > TARGET.torrent`
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
@@ -37,13 +31,6 @@ Used to convert between equivalent JSON and Bencoding data. Data that does not h
 ---
 
 Use `./doc` to run `godoc` and open a browser pointing at `jbitor`.
-
----
-
-For the GUI you may need to install something like:
-
-    PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig brew install gtk+
-    PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig go get github.com/mattn/go-gtk/gtk
 
 ---
 

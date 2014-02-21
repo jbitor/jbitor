@@ -1,7 +1,3 @@
 [submodule "src/github.com/jbitor/bencoding"]
     path = src/github.com/jbitor/bencoding
     url = https://github.com/jbitor/bencoding.git
-
-[submodule "src/github.com/mattn/go-gtk"]
-    path = src/github.com/mattn/go-gtk
-    url = https://github.com/mattn/go-gtk.git

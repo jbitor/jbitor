@@ -27,21 +27,4 @@ bin/jbitor:
 	go test -run=. -bench=NONE github.com/jbitor/jbitor/cli/jbitor
 	#
 
-bin/jbitorgtk:
-    ### Formatting Packages...
-    #
-	go fmt github.com/jbitor/jbitor/gtkgui
-	go fmt github.com/jbitor/jbitor/gtkgui/jbitorgtk
-	#
-    ### Installing Packages...
-    #
-	go install github.com/mattn/go-gtk/gtk
-	go install github.com/jbitor/jbitor/gtkgui
-	go install github.com/jbitor/jbitor/gtkgui/jbitorgtk
-	#
-	### Testing...
-	go test github.com/jbitor/jbitor/gtkgui
-	go test github.com/jbitor/jbitor/gtkgui/jbitorgtk
-	#
-
 PHONY:
