@@ -1,4 +1,4 @@
-// Package cli provides a command-line interface for functionality in go-jbitor.
+// Package cli provides a command-line interface for functionality in jbitor.
 package cli
 
 import (

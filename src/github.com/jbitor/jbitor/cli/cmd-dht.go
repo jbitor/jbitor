@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"github.com/jeremybanks/go-jbitor/dht"
-	"github.com/jeremybanks/go-jbitor/torrent"
+	"github.com/jbitor/jbitor/dht"
+	"github.com/jbitor/jbitor/torrent"
 	"os"
 	"time"
 )

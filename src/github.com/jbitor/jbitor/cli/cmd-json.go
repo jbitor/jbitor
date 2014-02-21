@@ -2,7 +2,7 @@ package cli
 
 import (
 	"encoding/json"
-	"github.com/jeremybanks/go-jbitor/bencoding"
+	"github.com/jbitor/jbitor/bencoding"
 	"io/ioutil"
 	"os"
 )

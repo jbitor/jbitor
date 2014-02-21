@@ -1,6 +1,6 @@
 ## jbitor
 
-web: https://github.com/jbitor/jbitor
+web: https://github.com/jbitor/jbitor  
 git: https://github.com/jbitor/jbitor.git
 
 <a href="https://travis-ci.org/jbitor/jbitor/branches">
@@ -36,7 +36,7 @@ Used to convert between equivalent JSON and Bencoding data. Data that does not h
 
 ---
 
-Use `./doc` to run `godoc` and open a browser pointing at `go-jbitor`.
+Use `./doc` to run `godoc` and open a browser pointing at `jbitor`.
 
 ---
 
@@ -47,6 +47,6 @@ For the GUI you may need to install something like:
 
 ---
 
-Copyright 2013 Jeremy Banks <<jeremy@jeremybanks.ca>>.
+Copyright 2013-2014 Jeremy Banks <<j@jeremybanks.ca>>.
 
 Currently released under the GPLv3. Maybe BSD later.

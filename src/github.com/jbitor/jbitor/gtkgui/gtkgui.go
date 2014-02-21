@@ -2,7 +2,7 @@ package gtkgui
 
 import (
 	"fmt"
-	"github.com/jeremybanks/go-jbitor/dht"
+	"github.com/jbitor/jbitor/dht"
 	"github.com/mattn/go-gtk/gtk"
 	"math"
 	"os"
