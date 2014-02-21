@@ -13,3 +13,7 @@
 [submodule "src/github.com/jbitor/bittorrent"]
     path = src/github.com/jbitor/bittorrent
     url = https://github.com/jbitor/bittorrent.git
+
+[submodule "src/github.com/jbitor/webclient"]
+    path = src/github.com/jbitor/webclient
+    url = https://github.com/jbitor/webclient.git
