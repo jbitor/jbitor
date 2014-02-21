@@ -3,7 +3,7 @@ package torrent
 import (
 	"errors"
 	"fmt"
-	"github.com/jbitor/jbitor/bencoding"
+	"github.com/jbitor/bencoding"
 	"net"
 )
 

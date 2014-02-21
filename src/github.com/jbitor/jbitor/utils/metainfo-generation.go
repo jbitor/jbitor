@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/jbitor/jbitor/bencoding"
+	"github.com/jbitor/bencoding"
 	"io"
 	"io/ioutil"
 	"os"

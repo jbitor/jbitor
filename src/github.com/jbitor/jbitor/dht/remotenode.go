@@ -2,7 +2,7 @@ package dht
 
 import (
 	"fmt"
-	"github.com/jbitor/jbitor/bencoding"
+	"github.com/jbitor/bencoding"
 	"github.com/jbitor/jbitor/torrent"
 	"net"
 	"time"

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"crypto/sha1"
-	"github.com/jbitor/jbitor/bencoding"
+	"github.com/jbitor/bencoding"
 	"github.com/jbitor/jbitor/torrent"
 	"github.com/jbitor/jbitor/utils"
 	"os"
