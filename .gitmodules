@@ -10,6 +10,6 @@
     path = src/github.com/jbitor/dht
     url = https://github.com/jbitor/dht.git
 
-[submodule "src/github.com/jbitor/torrent"]
-    path = src/github.com/jbitor/torrent
-    url = https://github.com/jbitor/torrent.git
+[submodule "src/github.com/jbitor/bittorrent"]
+    path = src/github.com/jbitor/bittorrent
+    url = https://github.com/jbitor/bittorrent.git
