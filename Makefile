@@ -27,4 +27,27 @@ bin/jbitor:
 	go test -run=. -bench=NONE github.com/jbitor/cli/jbitor
 	#
 
+bin/jbitor-create:
+	### Formatting...
+	#
+	go fmt github.com/jbitor/bencoding
+	go fmt github.com/jbitor/bittorrent
+	go fmt github.com/jbitor/cli
+	go fmt github.com/jbitor/cli/jbitor-create
+	#
+	### Installing packages...
+	#
+	go install github.com/jbitor/bencoding
+	go install github.com/jbitor/bittorrent
+	go install github.com/jbitor/cli
+	go install github.com/jbitor/cli/jbitor-create
+	#
+	### Testing...
+	#
+	go test -run=. -bench=NONE github.com/jbitor/bencoding
+	go test -run=. -bench=NONE github.com/jbitor/bittorrent
+	go test -run=. -bench=NONE github.com/jbitor/cli
+	go test -run=. -bench=NONE github.com/jbitor/cli/jbitor-create
+	#
+
 PHONY:
