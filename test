@@ -5,7 +5,10 @@ set -eux
 echo '{"a": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding
 
 ./clean
-./jbitor-create test-torrents
+./jbitor-create test-torrents/
+
+./clean
+./jbitor-create Makefile
 
 ./clean
 GOPATH="$PWD" make -B bin/jbitor-web
