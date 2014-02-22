@@ -3,7 +3,7 @@ go:
 - 1.1.2
 - release
 script:
-- echo '{"a": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding
+- "echo '{\"a\": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding"
 - ./jbitor-create test-torrents
 - GOPATH="$PWD" make -B bin/jbitor-web
 - GOPATH="$PWD" make -B bin/jbitor-find-peers
