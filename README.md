@@ -25,7 +25,7 @@ Maintains a (client-only) connection to the mainline BitTorrent DHT until termin
 
 Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
 
-#### `./jbitor json from-bencoding < FOO.benc > FOO.json`  <br />  `bin/cli json to-bencoding < FOO.json > FOO.benc`
+#### `./jbitor-json from-bencoding < FOO.benc > FOO.json`  <br />  `./jbitor-json to-bencoding < FOO.json > FOO.benc`
 
 Used to convert between equivalent JSON and Bencoding data. Data that does not have an equivalent representation in the other format will cause an error.
 

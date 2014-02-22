@@ -4,4 +4,4 @@ set -e
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
 export PATH="$PATH:$GOPATH/bin"
 python -m webbrowser http://localhost:6060/pkg/github.com/jbitor/
-godoc -http=:6060 -index -play=true -q=true -index_throttle=0.25
+"$(go env GOROOT)/bin/godoc" -http=:6060 -index -play=true -q=true -index_throttle=0.25
