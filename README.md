@@ -1,12 +1,24 @@
 ## jbitor
 
+BitTorrent stuff. Unlikely to ever be a full client.
+
 web: https://github.com/jbitor/jbitor  
 git: https://github.com/jbitor/jbitor.git
+
+##### Travis CI status
 
 <a href="https://travis-ci.org/jbitor/jbitor/branches">
 <img src="https://travis-ci.org/jbitor/jbitor.png?branch=master"
      alt="master branch build status on Travis CI" />
 </a>
+
+##### Docs on godoc.org
+
+- [bencoding](https://godoc.org/github.com/jbitor/bencoding)
+- [bittorrent](https://godoc.org/github.com/jbitor/bittorrent)
+- [cli](https://godoc.org/github.com/jbitor/cli)
+- [dht](https://godoc.org/github.com/jbitor/dht)
+- [webclient](https://godoc.org/github.com/jbitor/webclient)
 
 ---
 
