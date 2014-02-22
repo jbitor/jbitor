@@ -10,16 +10,16 @@ git: https://github.com/jbitor/jbitor.git
 
 ---
 
-### Implemented Functionality
+### Provided Commands
+
+#### `./jbitor-web`
+
+Serves a web GUI at <http://127.0.0.1:47935/>.
+Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
 #### `./jbitor-create TARGET > TARGET.torrent`
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
-
-#### `./jbitor-web`
-
-Serves a web GUI at <<http://127.0.0.1:47935/>>.
-Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
 #### `./jbitor-get-peers INFOHASH`
 
@@ -31,7 +31,10 @@ Used to convert between equivalent JSON and Bencoding data. Data that does not h
 
 ---
 
-Use `./doc` to run `godoc` and open a browser pointing at `jbitor`.
+`./test` tests and builds everything, and runs some simple things.
+
+`./doc` runs `godoc` and opens a browser pointing viewing `jbitor`'s docs.
+(Requires `godoc`, you may need to `go get code.google.com/p/go.tools/cmd/godoc`.)
 
 ---
 

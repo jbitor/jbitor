@@ -8,3 +8,6 @@
 
 # DHT state
 .dht-peer
+
+# godoc may be installed here
+src/code.google.com/p/go.tools/
