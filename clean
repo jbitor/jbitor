@@ -1,0 +1,5 @@
+#!/bin/bash
+set -xu
+rm -rf pkg/*
+rm -rf bin/*
+rm -rf tmp/*

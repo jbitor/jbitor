@@ -1,0 +1,20 @@
+#!/bin/bash
+set -eux
+
+./clean
+echo '{"a": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding
+
+./clean
+./jbitor-create test-torrents
+
+./clean
+GOPATH="$PWD" make -B bin/jbitor-web
+
+./clean
+GOPATH="$PWD" make -B bin/jbitor-get-peers
+
+./clean
+GOPATH="$PWD" make -B bin/jbitor-create
+
+./clean
+GOPATH="$PWD" make -B bin/jbitor-json

@@ -1,11 +1,6 @@
 langauge: go
 go:
-- 1.1.2
+- 1.2
 - release
 script:
-- "echo '{\"a\": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding"
-- ./jbitor-create test-torrents
-- GOPATH="$PWD" make -B bin/jbitor-web
-- GOPATH="$PWD" make -B bin/jbitor-get-peers
-- GOPATH="$PWD" make -B bin/jbitor-create
-- GOPATH="$PWD" make -B bin/jbitor-json
+- ./test
