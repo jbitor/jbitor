@@ -3,6 +3,9 @@ go:
 - 1.1.2
 - release
 script:
-- GOPATH="$PWD" make -B bin/jbitor
+- echo '{"a": [1, 2]}' | ./jbitor-json to-bencoding | ./jbitor-json from-bencoding
+- ./jbitor-create test-torrents
+- GOPATH="$PWD" make -B bin/jbitor-web
+- GOPATH="$PWD" make -B bin/jbitor-find-peers
 - GOPATH="$PWD" make -B bin/jbitor-create
-- bin/jbitor-create test-torrents
+- GOPATH="$PWD" make -B bin/jbitor-json

@@ -12,15 +12,16 @@ git: https://github.com/jbitor/jbitor.git
 
 ### Implemented Functionality
 
-#### `./jbitor torrent create TARGET > TARGET.torrent`
+#### `./jbitor-create TARGET > TARGET.torrent`
 
 Generates a torrent file for the target file or directory. The piece size is currently hardcoded.
 
-#### `./jbitor dht connect`
+#### `./jbitor-web`
 
+Serves a web GUI at <<http://127.0.0.1:47935/>>.
 Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
-#### `./jbitor dht get-peers INFOHASH`
+#### `./jbitor-get-peers INFOHASH`
 
 Uses the DHT to find BitTorrent peers for the torrent with the given infohash, and outputs their connection info.
 
