@@ -4,3 +4,5 @@ go:
 - release
 script:
 - GOPATH="$PWD" make -B bin/jbitor
+- GOPATH="$PWD" make -B bin/jbitor-create
+- bin/jbitor-create test-torrents
