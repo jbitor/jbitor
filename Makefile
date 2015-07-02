@@ -1,11 +1,11 @@
 bin/jbitor-web:
 	### Formatting...
 	#
-	go fmt github.com/jbitor/bencoding
-	go fmt github.com/jbitor/dht
-	go fmt github.com/jbitor/bittorrent
-	go fmt github.com/jbitor/webclient
-	go fmt github.com/jbitor/cli/jbitor-web
+	goimports -w src/github.com/jbitor/bencoding
+	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent
+	goimports -w src/github.com/jbitor/webclient
+	goimports -w src/github.com/jbitor/cli/jbitor-web
 	#
 	### Installing packages...
 	#
@@ -27,10 +27,10 @@ bin/jbitor-web:
 bin/jbitor-get-peers:
 	### Formatting...
 	#
-	go fmt github.com/jbitor/bencoding
-	go fmt github.com/jbitor/dht
-	go fmt github.com/jbitor/bittorrent
-	go fmt github.com/jbitor/cli/jbitor-get-peers
+	goimports -w src/github.com/jbitor/bencoding
+	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent
+	goimports -w src/github.com/jbitor/cli/jbitor-get-peers
 	#
 	### Installing packages...
 	#
@@ -50,8 +50,8 @@ bin/jbitor-get-peers:
 bin/jbitor-json:
 	### Formatting...
 	#
-	go fmt github.com/jbitor/bencoding
-	go fmt github.com/jbitor/cli/jbitor-json
+	goimports -w src/github.com/jbitor/bencoding
+	goimports -w src/github.com/jbitor/cli/jbitor-json
 	#
 	### Installing packages...
 	#
@@ -67,9 +67,9 @@ bin/jbitor-json:
 bin/jbitor-create:
 	### Formatting...
 	#
-	go fmt github.com/jbitor/bencoding
-	go fmt github.com/jbitor/bittorrent
-	go fmt github.com/jbitor/cli/jbitor-create
+	goimports -w src/github.com/jbitor/bencoding
+	goimports -w src/github.com/jbitor/bittorrent
+	goimports -w src/github.com/jbitor/cli/jbitor-create
 	#
 	### Installing packages...
 	#
