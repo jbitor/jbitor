@@ -1,0 +1,18 @@
+# https://cloud.google.com/compute/docs/containers/container_vms
+version: v1beta3
+containers:
+- name: torrent-directory
+  image: banks/jbitor
+  ports:
+  - name: http
+    hostPort: 80
+    containerPort: 8080
+    protocol: TCP
+  - name: bittorrent
+    hostPort: 6881
+    containerPort: 6881
+    protocol: TCP
+  - name: bittorrent-dht
+    hostPort: 6882
+    containerPort: 6882
+    protocol: UDP

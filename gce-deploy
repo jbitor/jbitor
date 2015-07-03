@@ -1,0 +1,44 @@
+#!/bin/bash
+set -eu
+
+CONTAINER_MANIFEST="$(dirname $0)/gce-containers.yaml"
+
+CONTAINER_NAME="torrent-directory"
+INSTANCE_NAME="torrent-directory"
+INSTANCE_ZONE="us-central1-a"
+ADDRESS_NAME="torrent-directory"
+DOCKER_HUB_IMAGE="banks/jbitor"
+
+MACHINE_TYPE="f1-micro"
+
+if (gcloud compute instances list \
+	    "$INSTANCE_NAME" --zone "$INSTANCE_ZONE" \
+		| grep "$INSTANCE_NAME" > /dev/null); then
+	printf "\n$(tput setaf 1)An instance is already running. Delete it?$(tput sgr0)\n"
+	(set -x
+		gcloud compute instances delete \
+			"$INSTANCE_NAME" \
+			--zone "$INSTANCE_ZONE")
+fi
+
+printf "\n$(tput setaf 4)Attempting to launch new instance.$(tput sgr0)\n"
+(set -x
+	gcloud compute instances create \
+		"$INSTANCE_NAME" --zone "$INSTANCE_ZONE" \
+	    --address "$ADDRESS_NAME" \
+	    --image "container-vm-v20150611" \
+	    --image-project "google-containers" \
+	    --metadata-from-file "google-container-manifest=$CONTAINER_MANIFEST" \
+	    --machine-type "$MACHINE_TYPE" \
+	    --tags "http-server")
+
+# Wait a moment for the instance to wake up.
+sleep 10
+
+# XXX(jre): I don't think should be neccessary to explicitly connect and start
+#     the Docker image, but I guess I'm doing something wrong.
+printf "\n$(tput setaf 2)Connecting to our new instance to launch our image.$(tput sgr0)\n"
+(set -x
+	gcloud compute ssh \
+		"$INSTANCE_NAME" --zone "$INSTANCE_ZONE" \
+		--command "sudo docker run -d --publish 80:8080 --publish 6881:6881 --publish 6882:6882 $DOCKER_HUB_IMAGE")
