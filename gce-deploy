@@ -3,6 +3,7 @@ set -eu
 
 CONTAINER_MANIFEST="$(dirname $0)/gce-containers.yaml"
 
+PROJET_NAME="torrent-directory"
 CONTAINER_NAME="torrent-directory"
 INSTANCE_NAME="torrent-directory"
 INSTANCE_ZONE="us-central1-a"
@@ -30,15 +31,19 @@ printf "\n$(tput setaf 4)Attempting to launch new instance.$(tput sgr0)\n"
 	    --image-project "google-containers" \
 	    --metadata-from-file "google-container-manifest=$CONTAINER_MANIFEST" \
 	    --machine-type "$MACHINE_TYPE" \
-	    --tags "http-server")
+	    --tags "http-server" \
+	    --project "torrent-directory" \
+	    --scopes "datastore,userinfo-email")
 
-# Wait a moment for the instance to wake up.
-sleep 10
+# Wait some time for the instance to wake up.
+sleep 24
 
 # XXX(jre): I don't think should be neccessary to explicitly connect and start
 #     the Docker image, but I guess I'm doing something wrong.
-printf "\n$(tput setaf 2)Connecting to our new instance to launch our image.$(tput sgr0)\n"
+printf "\n$(tput setaf 4)Connecting to our new instance to launch our image.$(tput sgr0)\n"
 (set -x
 	gcloud compute ssh \
 		"$INSTANCE_NAME" --zone "$INSTANCE_ZONE" \
 		--command "sudo docker run -d --publish 80:8080 --publish 6881:6881 --publish 6882:6882 $DOCKER_HUB_IMAGE")
+
+printf "\nDone.$(tput sgr0)\n"
