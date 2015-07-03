@@ -2,7 +2,5 @@
 set -e
 NAME="$(basename ""$0"")"
 export GOPATH="$PWD/$(dirname ""$(which """"$0"""")"")"
-export PATH="$PATH:$GOPATH/bin"
 make --always-make bin/"$NAME" > /dev/null || make --always-make bin/"$NAME"
-
-"$NAME" $*
+"$GOPATH/bin/$NAME" $*

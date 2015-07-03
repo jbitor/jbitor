@@ -1,4 +1,5 @@
 all:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -24,6 +25,7 @@ all:
 	go install github.com/jbitor/cli/jbitor-get-info
 
 bin/jbitor-web:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -50,6 +52,7 @@ bin/jbitor-web:
 	#
 
 bin/jbitor-get-peers:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -73,6 +76,7 @@ bin/jbitor-get-peers:
 	#
 
 bin/jbitor-json:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -90,6 +94,7 @@ bin/jbitor-json:
 	#
 
 bin/jbitor-create:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -110,6 +115,7 @@ bin/jbitor-create:
 	#
 
 bin/jbitor-get-info:
+	export GOPATH=$$PWD
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
