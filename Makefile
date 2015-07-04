@@ -1,5 +1,8 @@
+# TODO: This is disgusting. Kill it with fire.
+
 all:
 	export GOPATH=$$PWD
+	echo $$GOPATH
 	### Formatting...
 	#
 	goimports -w src/github.com/jbitor/bencoding
@@ -14,6 +17,7 @@ all:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/dht
 	go install github.com/jbitor/bittorrent
@@ -36,6 +40,7 @@ bin/jbitor-web:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/dht
 	go install github.com/jbitor/bittorrent
@@ -62,6 +67,7 @@ bin/jbitor-get-peers:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/dht
 	go install github.com/jbitor/bittorrent
@@ -84,6 +90,7 @@ bin/jbitor-json:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/cli/jbitor-json
 	#
@@ -103,6 +110,7 @@ bin/jbitor-create:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/bittorrent
 	go install github.com/jbitor/cli/jbitor-create
@@ -125,6 +133,7 @@ bin/jbitor-get-info:
 	#
 	### Installing packages...
 	#
+	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/bittorrent
 	go install github.com/jbitor/dht
