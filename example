@@ -2,4 +2,4 @@
 set -eux
 UBUNTU_BTIH="546cf15f724d19c4319cc17b179d7e035f89c1f4"
 ./jbitor-get-peers "$UBUNTU_BTIH" > "$UBUNTU_BTIH.peers"
-./jbitor-get-info "$UBUNTU_BTIH" < "$UBUNTU_BTIH.peers" > "$UBUNTU_BTIH.torrrent"
+./jbitor-get-info "$UBUNTU_BTIH" < "$UBUNTU_BTIH.peers" > "$UBUNTU_BTIH.torrent"

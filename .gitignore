@@ -10,7 +10,7 @@
 .dht-peer
 
 # Torrent info and state
-*.torrrent
+*.torrent
 *.peers
 *.incomplete
 
