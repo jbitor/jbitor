@@ -17,3 +17,7 @@
 [submodule "src/github.com/jbitor/webclient"]
     path = src/github.com/jbitor/webclient
     url = https://github.com/jbitor/webclient.git
+
+[submodule "src/github.com/op/go-logging"]
+    path = src/github.com/op/go-logging
+    url = https://github.com/op/go-logging.git
