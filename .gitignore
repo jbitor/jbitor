@@ -9,8 +9,10 @@
 # DHT state
 .dht-peer
 
-# Torrents states
+# Torrent info and state
+*.torrrent
 *.peers
+*.incomplete
 
 # godoc may be installed here
 src/code.google.com/p/go.tools/

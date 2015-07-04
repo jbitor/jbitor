@@ -17,6 +17,9 @@ GOPATH="$PWD" make -B bin/jbitor-web
 GOPATH="$PWD" make -B bin/jbitor-get-peers
 
 ./clean
+GOPATH="$PWD" make -B bin/jbitor-get-info
+
+./clean
 GOPATH="$PWD" make -B bin/jbitor-create
 
 ./clean

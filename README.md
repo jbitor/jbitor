@@ -26,7 +26,7 @@ git: https://github.com/jbitor/jbitor.git
 
 #### `./jbitor-web`
 
-Serves a web GUI at <http://127.0.0.1:47935/>.
+Serves a web GUI at <http://127.0.0.1:8080/>.
 Maintains a (client-only) connection to the mainline BitTorrent DHT until terminated.
 
 #### `./jbitor-create TARGET > TARGET.torrent`

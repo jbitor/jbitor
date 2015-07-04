@@ -1,6 +1,5 @@
 langauge: go
 go:
-- 1.2
 - release
 script:
 - ./test
