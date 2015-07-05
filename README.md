@@ -5,14 +5,7 @@ BitTorrent stuff. Unlikely to ever be a full client.
 web: https://github.com/jbitor/jbitor  
 git: https://github.com/jbitor/jbitor.git
 
-##### Travis CI status
-
-<a href="https://travis-ci.org/jbitor/jbitor/branches">
-<img src="https://travis-ci.org/jbitor/jbitor.png?branch=master"
-     alt="master branch build status on Travis CI" />
-</a>
-
-##### Docs on godoc.org
+##### godoc
 
 - [bencoding](https://godoc.org/github.com/jbitor/bencoding)
 - [bittorrent](https://godoc.org/github.com/jbitor/bittorrent)
@@ -45,11 +38,10 @@ Used to convert between equivalent JSON and Bencoding data. Data that does not h
 
 `./test` tests and builds everything, and runs some simple things.
 
+`./example` downloads an Ubuntu torrent file from peers found from the DHT.
+
 `./doc` runs `godoc` and opens a browser pointing viewing `jbitor`'s docs.
-(Requires `godoc`, you may need to `go get code.google.com/p/go.tools/cmd/godoc`.)
 
 ---
 
-Copyright 2013-2014 Jeremy Banks <<j@jeremybanks.ca>>.
-
-Currently released under the GPLv3. Maybe BSD later.
+Copyright 2013-2015 Jeremy Banks <<j@jeremybanks.ca>>.

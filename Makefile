@@ -5,6 +5,7 @@ all:
 	echo $$GOPATH
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/dht
 	goimports -w src/github.com/jbitor/bittorrent
@@ -32,6 +33,7 @@ bin/jbitor-web:
 	export GOPATH=$$PWD
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/dht
 	goimports -w src/github.com/jbitor/bittorrent
@@ -60,6 +62,7 @@ bin/jbitor-get-peers:
 	export GOPATH=$$PWD
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/dht
 	goimports -w src/github.com/jbitor/bittorrent
@@ -85,6 +88,7 @@ bin/jbitor-json:
 	export GOPATH=$$PWD
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/cli/jbitor-json
 	#
@@ -104,6 +108,7 @@ bin/jbitor-create:
 	export GOPATH=$$PWD
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/bittorrent
 	goimports -w src/github.com/jbitor/cli/jbitor-create
@@ -126,6 +131,7 @@ bin/jbitor-get-info:
 	export GOPATH=$$PWD
 	### Formatting...
 	#
+	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/bittorrent
 	goimports -w src/github.com/jbitor/dht
