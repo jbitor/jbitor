@@ -1,9 +1,0 @@
-langauge: go
-go:
-- release
-install:
-- go get golang.org/x/tools/cmd/goimports
-- go install golang.org/x/tools/cmd/goimports
-- go get -t ./...
-script:
-- ./test
