@@ -7,7 +7,7 @@ all:
 	#
 	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
-	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent/dht
 	goimports -w src/github.com/jbitor/bittorrent
 	goimports -w src/github.com/jbitor/webclient
 	goimports -w src/github.com/jbitor/cli/jbitor-web
@@ -20,7 +20,7 @@ all:
 	#
 	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
-	go install github.com/jbitor/dht
+	go install github.com/jbitor/bittorrent/dht
 	go install github.com/jbitor/bittorrent
 	go install github.com/jbitor/webclient
 	go install github.com/jbitor/cli/jbitor-web
@@ -35,7 +35,7 @@ bin/jbitor-web:
 	#
 	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
-	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent/dht
 	goimports -w src/github.com/jbitor/bittorrent
 	goimports -w src/github.com/jbitor/webclient
 	goimports -w src/github.com/jbitor/cli/jbitor-web
@@ -44,7 +44,7 @@ bin/jbitor-web:
 	#
 	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
-	go install github.com/jbitor/dht
+	go install github.com/jbitor/bittorrent/dht
 	go install github.com/jbitor/bittorrent
 	go install github.com/jbitor/webclient
 	go install github.com/jbitor/cli/jbitor-web
@@ -52,7 +52,7 @@ bin/jbitor-web:
 	### Testing...
 	#
 	go test -run=. -bench=NONE github.com/jbitor/bencoding
-	go test -run=. -bench=NONE github.com/jbitor/dht
+	go test -run=. -bench=NONE github.com/jbitor/bittorrent/dht
 	go test -run=. -bench=NONE github.com/jbitor/bittorrent
 	go test -run=. -bench=NONE github.com/jbitor/webclient
 	go test -run=. -bench=NONE github.com/jbitor/cli/jbitor-web
@@ -64,7 +64,7 @@ bin/jbitor-get-peers:
 	#
 	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
-	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent/dht
 	goimports -w src/github.com/jbitor/bittorrent
 	goimports -w src/github.com/jbitor/cli/jbitor-get-peers
 	#
@@ -72,14 +72,14 @@ bin/jbitor-get-peers:
 	#
 	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
-	go install github.com/jbitor/dht
+	go install github.com/jbitor/bittorrent/dht
 	go install github.com/jbitor/bittorrent
 	go install github.com/jbitor/cli/jbitor-get-peers
 	#
 	### Testing...
 	#
 	go test -run=. -bench=NONE github.com/jbitor/bencoding
-	go test -run=. -bench=NONE github.com/jbitor/dht
+	go test -run=. -bench=NONE github.com/jbitor/bittorrent/dht
 	go test -run=. -bench=NONE github.com/jbitor/bittorrent
 	go test -run=. -bench=NONE github.com/jbitor/cli/jbitor-get-peers
 	#
@@ -134,7 +134,7 @@ bin/jbitor-get-info:
 	goimports -w src/github.com/jbitor/cli/loggerconfig
 	goimports -w src/github.com/jbitor/bencoding
 	goimports -w src/github.com/jbitor/bittorrent
-	goimports -w src/github.com/jbitor/dht
+	goimports -w src/github.com/jbitor/bittorrent/dht
 	goimports -w src/github.com/jbitor/cli/jbitor-get-info
 	#
 	### Installing packages...
@@ -142,14 +142,14 @@ bin/jbitor-get-info:
 	go install github.com/op/go-logging
 	go install github.com/jbitor/bencoding
 	go install github.com/jbitor/bittorrent
-	go install github.com/jbitor/dht
+	go install github.com/jbitor/bittorrent/dht
 	go install github.com/jbitor/cli/jbitor-get-info
 	#
 	### Testing...
 	#
 	go test -run=. -bench=NONE github.com/jbitor/bencoding
 	go test -run=. -bench=NONE github.com/jbitor/bittorrent
-	go test -run=. -bench=NONE github.com/jbitor/dht
+	go test -run=. -bench=NONE github.com/jbitor/bittorrent/dht
 	go test -run=. -bench=NONE github.com/jbitor/cli/jbitor-get-info
 	#
 

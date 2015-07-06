@@ -6,10 +6,6 @@
     path = src/github.com/jbitor/cli
     url = https://github.com/jbitor/cli.git
 
-[submodule "src/github.com/jbitor/dht"]
-    path = src/github.com/jbitor/dht
-    url = https://github.com/jbitor/dht.git
-
 [submodule "src/github.com/jbitor/bittorrent"]
     path = src/github.com/jbitor/bittorrent
     url = https://github.com/jbitor/bittorrent.git
